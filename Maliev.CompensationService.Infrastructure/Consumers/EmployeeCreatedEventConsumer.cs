@@ -1,13 +1,13 @@
-using Maliev.EmployeeService.Domain.IntegrationEvents;
+using Maliev.MessagingContracts.Generated;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 
 namespace Maliev.CompensationService.Infrastructure.Consumers;
 
 /// <summary>
-/// Consumer for <see cref="EmployeeCreatedIntegrationEvent"/>
+/// Consumer for <see cref="EmployeeCreatedEvent"/>
 /// </summary>
-public class EmployeeCreatedEventConsumer : IConsumer<EmployeeCreatedIntegrationEvent>
+public class EmployeeCreatedEventConsumer : IConsumer<EmployeeCreatedEvent>
 {
     private readonly ILogger<EmployeeCreatedEventConsumer> _logger;
 
@@ -21,11 +21,13 @@ public class EmployeeCreatedEventConsumer : IConsumer<EmployeeCreatedIntegration
     }
 
     /// <inheritdoc />
-    public Task Consume(ConsumeContext<EmployeeCreatedIntegrationEvent> context)
+    public Task Consume(ConsumeContext<EmployeeCreatedEvent> context)
     {
         var @event = context.Message;
+        var payload = @event.Payload; // Access payload
+
         _logger.LogInformation("New employee created: {EmployeeId} ({EmployeeNumber}). Preparing compensation setup.", 
-            @event.EmployeeId, @event.EmployeeNumber);
+            payload.EmployeeId, payload.EmployeeNumber);
         
         return Task.CompletedTask;
     }

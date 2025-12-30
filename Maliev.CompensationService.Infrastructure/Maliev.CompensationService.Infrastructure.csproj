@@ -4,8 +4,10 @@
     <ProjectReference Include="..\Maliev.CompensationService.Domain\Maliev.CompensationService.Domain.csproj" />
     <ProjectReference Include="..\Maliev.CompensationService.Application\Maliev.CompensationService.Application.csproj" />
     <ProjectReference Include="..\..\Maliev.Aspire\Maliev.Aspire.ServiceDefaults\Maliev.Aspire.ServiceDefaults.csproj" />
-    <ProjectReference Include="..\..\Maliev.EmployeeService\Maliev.EmployeeService.Domain\Maliev.EmployeeService.Domain.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Maliev.MessagingContracts" Version="1.0.*" />
 
   <ItemGroup>
     <PackageReference Include="MassTransit" Version="8.5.7" />
