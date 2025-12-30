@@ -1,0 +1,767 @@
+openapi: 3.0.3
+info:
+  title: Maliev Compensation Service API
+  description: |
+    Employee Compensation Management Service API for managing compensation records,
+    salary history, benefits enrollment, and bulk operations.
+
+    **Security**: All endpoints require JWT authentication and permission-based authorization.
+    All operations are marked as critical and generate audit log entries.
+  version: 1.0.0
+  contact:
+    name: MALIEV Core Developers
+    email: support@maliev.com
+
+servers:
+  - url: https://api.maliev.com/compensation/v1
+    description: Production
+  - url: https://staging-api.maliev.com/compensation/v1
+    description: Staging
+  - url: http://localhost:8080/compensation/v1
+    description: Local Development
+
+tags:
+  - name: Compensation
+    description: Employee compensation management
+  - name: Benefits
+    description: Benefits enrollment and management
+  - name: Bulk Operations
+    description: Async bulk salary operations
+  - name: Reports
+    description: Compensation analytics and reporting
+
+security:
+  - BearerAuth: []
+
+paths:
+  # Compensation Endpoints
+  /employees/{employeeId}/compensation:
+    get:
+      tags: [Compensation]
+      summary: Get current compensation details
+      description: Retrieves the current compensation record for an employee
+      operationId: getCompensationDetails
+      parameters:
+        - $ref: '#/components/parameters/EmployeeIdPath'
+      responses:
+        '200':
+          description: Compensation details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompensationRecordDto'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - BearerAuth: [compensation.read]
+
+    post:
+      tags: [Compensation]
+      summary: Record compensation change
+      description: Creates a new compensation record (marks previous as not current)
+      operationId: recordCompensationChange
+      parameters:
+        - $ref: '#/components/parameters/EmployeeIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordCompensationChangeDto'
+      responses:
+        '201':
+          description: Compensation change recorded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  message:
+                    type: string
+                    example: Compensation record created successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security:
+        - BearerAuth: [compensation.update]
+
+  /employees/{employeeId}/compensation/history:
+    get:
+      tags: [Compensation]
+      summary: Get compensation history
+      description: Retrieves complete compensation history for an employee
+      operationId: getCompensationHistory
+      parameters:
+        - $ref: '#/components/parameters/EmployeeIdPath'
+        - name: fromDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Filter history from this date
+        - name: toDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Filter history to this date
+      responses:
+        '200':
+          description: Compensation history retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SalaryHistoryDto'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - BearerAuth: [compensation.read]
+
+  # Benefits Endpoints
+  /benefits:
+    get:
+      tags: [Benefits]
+      summary: List available benefits
+      description: Retrieves all active benefits programs
+      operationId: getAvailableBenefits
+      parameters:
+        - name: benefitType
+          in: query
+          schema:
+            $ref: '#/components/schemas/BenefitType'
+          description: Filter by benefit type
+      responses:
+        '200':
+          description: Benefits list retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BenefitDto'
+      security:
+        - BearerAuth: [compensation.read]
+
+  /employees/{employeeId}/benefits:
+    get:
+      tags: [Benefits]
+      summary: Get employee benefits
+      description: Retrieves all benefit enrollments for an employee
+      operationId: getEmployeeBenefits
+      parameters:
+        - $ref: '#/components/parameters/EmployeeIdPath'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/EnrollmentStatus'
+          description: Filter by enrollment status
+      responses:
+        '200':
+          description: Employee benefits retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BenefitsEnrollmentDto'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - BearerAuth: [compensation.read]
+
+    put:
+      tags: [Benefits]
+      summary: Update benefits enrollment
+      description: Updates an existing benefits enrollment (add dependents, change contribution)
+      operationId: updateBenefitsEnrollment
+      parameters:
+        - $ref: '#/components/parameters/EmployeeIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBenefitsEnrollmentDto'
+      responses:
+        '200':
+          description: Benefits enrollment updated successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - BearerAuth: [compensation.update]
+
+  /employees/{employeeId}/benefits/{benefitId}/enroll:
+    post:
+      tags: [Benefits]
+      summary: Enroll in benefit
+      description: Enrolls an employee in a benefit program
+      operationId: enrollInBenefit
+      parameters:
+        - $ref: '#/components/parameters/EmployeeIdPath'
+        - name: benefitId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [coverageLevel]
+              properties:
+                coverageLevel:
+                  type: string
+                  enum: [Individual, Family, Spouse, Spouse+Children]
+                employeeContribution:
+                  type: number
+                  format: decimal
+                dependents:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/DependentDto'
+      responses:
+        '201':
+          description: Enrollment created successfully
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+      security:
+        - BearerAuth: [compensation.update]
+
+  /employees/{employeeId}/benefits/{benefitId}:
+    delete:
+      tags: [Benefits]
+      summary: Terminate benefit
+      description: Terminates an active benefits enrollment
+      operationId: terminateBenefit
+      parameters:
+        - $ref: '#/components/parameters/EmployeeIdPath'
+        - name: benefitId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: terminationDate
+          in: query
+          required: true
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '204':
+          description: Benefit terminated successfully
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - BearerAuth: [compensation.update]
+
+  # Bulk Operations Endpoints
+  /bulk/salary-increase:
+    post:
+      tags: [Bulk Operations]
+      summary: Apply bulk salary increase
+      description: Applies salary increase to multiple employees (max 500 per job)
+      operationId: bulkSalaryIncrease
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BulkSalaryIncreaseDto'
+      responses:
+        '202':
+          description: Bulk operation accepted for processing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkJobStatusDto'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - BearerAuth: [compensation.admin]
+
+  /bulk/jobs/{jobId}:
+    get:
+      tags: [Bulk Operations]
+      summary: Get bulk job status
+      description: Retrieves the status of a bulk operation job
+      operationId: getBulkJobStatus
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Job status retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkJobStatusDto'
+        '404':
+          $ref: '#/components/responses/NotFound'
+      security:
+        - BearerAuth: [compensation.admin]
+
+  # Reports Endpoints
+  /reports/analysis:
+    get:
+      tags: [Reports]
+      summary: Compensation analysis report
+      description: Generates statistical analysis of compensation distribution
+      operationId: getCompensationAnalysis
+      parameters:
+        - name: departmentId
+          in: query
+          schema:
+            type: string
+            format: uuid
+          description: Filter by department
+      responses:
+        '200':
+          description: Analysis report generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompensationAnalysisDto'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - BearerAuth: [compensation.reports]
+
+  /reports/budget:
+    get:
+      tags: [Reports]
+      summary: Compensation budget report
+      description: Calculates total compensation costs and projections
+      operationId: getCompensationBudget
+      responses:
+        '200':
+          description: Budget report generated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalCompensationCost:
+                    type: number
+                    format: decimal
+                  projectedIncrease:
+                    type: number
+                    format: decimal
+                  budgetImpact:
+                    type: number
+                    format: decimal
+        '403':
+          $ref: '#/components/responses/Forbidden'
+      security:
+        - BearerAuth: [compensation.reports]
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    EmployeeIdPath:
+      name: employeeId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+      description: Employee unique identifier
+
+  schemas:
+    CompensationRecordDto:
+      type: object
+      required: [id, employeeId, effectiveDate, baseSalary, currency, compensationType]
+      properties:
+        id:
+          type: string
+          format: uuid
+        employeeId:
+          type: string
+          format: uuid
+        effectiveDate:
+          type: string
+          format: date-time
+        baseSalary:
+          type: number
+          format: decimal
+          description: "[SENSITIVE - Not logged]"
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+          example: USD
+        compensationType:
+          $ref: '#/components/schemas/CompensationType'
+        bonusPercentage:
+          type: number
+          format: decimal
+          minimum: 0
+          maximum: 100
+        commissionRate:
+          type: number
+          format: decimal
+          minimum: 0
+          maximum: 100
+        changeReason:
+          type: string
+          maxLength: 500
+        approvedBy:
+          type: string
+          format: uuid
+
+    RecordCompensationChangeDto:
+      type: object
+      required: [effectiveDate, baseSalary, currency, compensationType, changeReason]
+      properties:
+        effectiveDate:
+          type: string
+          format: date-time
+          description: Must be today or future date
+        baseSalary:
+          type: number
+          format: decimal
+          minimum: 0.01
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+        compensationType:
+          $ref: '#/components/schemas/CompensationType'
+        bonusPercentage:
+          type: number
+          format: decimal
+          minimum: 0
+          maximum: 100
+        commissionRate:
+          type: number
+          format: decimal
+          minimum: 0
+          maximum: 100
+        changeReason:
+          type: string
+          maxLength: 500
+
+    SalaryHistoryDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        employeeId:
+          type: string
+          format: uuid
+        previousSalary:
+          type: number
+          format: decimal
+        newSalary:
+          type: number
+          format: decimal
+        changeAmount:
+          type: number
+          format: decimal
+        changePercentage:
+          type: number
+          format: decimal
+        effectiveDate:
+          type: string
+          format: date-time
+        changeType:
+          type: string
+          enum: [Promotion, Merit, Adjustment, Initial, Correction]
+        changedBy:
+          type: string
+          format: uuid
+
+    BenefitDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        benefitType:
+          $ref: '#/components/schemas/BenefitType'
+        employerContribution:
+          type: number
+          format: decimal
+        employeeContribution:
+          type: number
+          format: decimal
+
+    BenefitsEnrollmentDto:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        employeeId:
+          type: string
+          format: uuid
+        benefitId:
+          type: string
+          format: uuid
+        enrollmentDate:
+          type: string
+          format: date-time
+        terminationDate:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/EnrollmentStatus'
+        employeeContribution:
+          type: number
+          format: decimal
+        coverageLevel:
+          type: string
+        dependents:
+          type: array
+          items:
+            $ref: '#/components/schemas/DependentDto'
+
+    UpdateBenefitsEnrollmentDto:
+      type: object
+      required: [benefitId]
+      properties:
+        benefitId:
+          type: string
+          format: uuid
+        coverageLevel:
+          type: string
+        employeeContribution:
+          type: number
+          format: decimal
+        dependents:
+          type: array
+          items:
+            $ref: '#/components/schemas/DependentDto'
+
+    DependentDto:
+      type: object
+      required: [firstName, lastName, relationship, dateOfBirth]
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+          maxLength: 100
+        lastName:
+          type: string
+          maxLength: 100
+        relationship:
+          $ref: '#/components/schemas/DependentRelationship'
+        dateOfBirth:
+          type: string
+          format: date
+        nationalId:
+          type: string
+          description: "[SENSITIVE - Encrypted]"
+
+    BulkSalaryIncreaseDto:
+      type: object
+      required: [departmentId, increasePercentage, effectiveDate, reason]
+      properties:
+        departmentId:
+          type: string
+          format: uuid
+        increasePercentage:
+          type: number
+          format: decimal
+          minimum: 0
+          maximum: 100
+        effectiveDate:
+          type: string
+          format: date-time
+        reason:
+          type: string
+          maxLength: 500
+        webhookUrl:
+          type: string
+          format: uri
+          description: Optional callback URL for job completion
+
+    BulkJobStatusDto:
+      type: object
+      properties:
+        jobId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [Pending, InProgress, Completed, Failed, PartiallyCompleted]
+        affectedEmployees:
+          type: integer
+        successCount:
+          type: integer
+        failureCount:
+          type: integer
+        startedAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+
+    CompensationAnalysisDto:
+      type: object
+      properties:
+        averageSalary:
+          type: number
+          format: decimal
+        medianSalary:
+          type: number
+          format: decimal
+        minSalary:
+          type: number
+          format: decimal
+        maxSalary:
+          type: number
+          format: decimal
+        totalEmployees:
+          type: integer
+        byCompensationType:
+          type: object
+          additionalProperties:
+            type: integer
+        byDepartment:
+          type: object
+          additionalProperties:
+            type: number
+            format: decimal
+
+    # Enums
+    CompensationType:
+      type: string
+      enum: [Salary, Hourly, Contract, Commission]
+
+    BenefitType:
+      type: string
+      enum: [HealthInsurance, DentalInsurance, VisionInsurance, LifeInsurance, Retirement401k, StockOptions, PaidTimeOff, WellnessProgram, EducationAssistance]
+
+    EnrollmentStatus:
+      type: string
+      enum: [Active, Pending, Terminated, OnHold]
+
+    DependentRelationship:
+      type: string
+      enum: [Spouse, Child, DomesticPartner, Parent, Other]
+
+    # Error Responses
+    ErrorResponse:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: object
+
+  responses:
+    BadRequest:
+      description: Bad request - validation errors
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            invalidSalary:
+              value:
+                code: INVALID_SALARY
+                message: Salary must be positive
+            invalidCurrency:
+              value:
+                code: INVALID_CURRENCY
+                message: Invalid currency code
+            invalidEffectiveDate:
+              value:
+                code: INVALID_EFFECTIVE_DATE
+                message: Date must be current or future
+            changeLimitExceeded:
+              value:
+                code: CHANGE_LIMIT_EXCEEDED
+                message: Increase exceeds 25% limit
+
+    Forbidden:
+      description: Access denied - insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            code: NOT_AUTHORIZED
+            message: User cannot access compensation
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            employeeNotFound:
+              value:
+                code: EMPLOYEE_NOT_FOUND
+                message: Employee not found
+            benefitNotFound:
+              value:
+                code: BENEFIT_NOT_FOUND
+                message: Benefit not found
+
+    Conflict:
+      description: Conflict - duplicate or concurrent update
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          examples:
+            enrollmentExists:
+              value:
+                code: ENROLLMENT_EXISTS
+                message: Already enrolled in benefit
+            concurrentUpdate:
+              value:
+                code: CONCURRENT_UPDATE
+                message: Record was modified by another user, please refresh and retry

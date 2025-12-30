@@ -1,0 +1,52 @@
+# .NET Build outputs
+**/bin/
+**/obj/
+**/out/
+**/.vs/
+**/.vscode/
+
+# Test results
+**/TestResults/
+**/*.trx
+
+# NuGet packages
+**/*.nupkg
+**/*.snupkg
+**/packages/
+
+# IDE and editor files
+**/.idea/
+**/.vscode/
+**/*.user
+**/*.suo
+**/*.userosscache
+**/*.sln.docstates
+**/.DS_Store
+
+# Git
+**/.git/
+**/.gitignore
+**/.gitattributes
+
+# Documentation
+**/README.md
+**/docs/
+
+# Docker
+**/.dockerignore
+**/Dockerfile*
+**/docker-compose*
+
+# Temporary files
+**/*~
+**/*.swp
+**/*.tmp
+**/*.log
+
+# Specification and planning
+**/specs/
+**/.specify/
+**/CLAUDE.md
+
+# CI/CD
+**/.github/

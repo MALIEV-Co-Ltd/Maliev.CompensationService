@@ -1,0 +1,121 @@
+name: CI - Develop
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.x"
+
+      - name: Switch to PackageReference for CI build
+        run: |
+          # Replace ProjectReference with PackageReference in all service csproj files
+          echo "Converting ProjectReferences to PackageReferences..."
+
+          for file in $(find . -name "*.csproj"); do
+            echo "Processing $file"
+
+            # Backup
+            cp "$file" "$file.bak"
+
+            # Replace Aspire ServiceDefaults
+            sed -i 's|<ProjectReference Include=".*Maliev.Aspire.ServiceDefaults.*.csproj" />|<PackageReference Include="Maliev.Aspire.ServiceDefaults" Version="1.0.*" />|g' "$file"
+
+            # Replace MessagingContracts (if present)
+            sed -i 's|<ProjectReference Include=".*Maliev.MessagingContracts.*.csproj" />|<PackageReference Include="Maliev.MessagingContracts" Version="1.0.*" />|g' "$file"
+
+            # Verify changes
+            if grep -q "ProjectReference.*Maliev.Aspire.ServiceDefaults" "$file"; then
+              echo "ERROR: Failed to replace Aspire.ServiceDefaults in $file"
+              exit 1
+            fi
+
+            # Show diff
+            diff "$file.bak" "$file" || true
+          done
+
+          echo "Switched to PackageReference for ServiceDefaults and MessagingContracts"
+
+      - name: Restore dependencies
+        run: dotnet restore Maliev.CompensationService.sln
+        env:
+          NUGET_USERNAME: ${{ github.actor }}
+          NUGET_PASSWORD: ${{ secrets.GITOPS_PAT }}
+
+      - name: Build
+        run: dotnet build Maliev.CompensationService.sln --no-restore
+
+      - name: Test
+        run: dotnet test Maliev.CompensationService.sln --no-build --verbosity normal
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v3
+        with:
+          project_id: maliev-website
+
+      - name: Build and push Docker image
+        run: |
+          gcloud auth configure-docker asia-southeast1-docker.pkg.dev
+          NUGET_USERNAME=${{ github.actor }} NUGET_PASSWORD=${{ secrets.GITOPS_PAT }} docker build --secret id=nuget_username,env=NUGET_USERNAME --secret id=nuget_password,env=NUGET_PASSWORD -t asia-southeast1-docker.pkg.dev/maliev-website/maliev-website-artifact-dev/maliev-compensation-service:${{ github.sha }} -f Maliev.CompensationService.Api/Dockerfile .
+          docker push asia-southeast1-docker.pkg.dev/maliev-website/maliev-website-artifact-dev/maliev-compensation-service:${{ github.sha }}
+
+      - name: Checkout maliev-gitops repository
+        uses: actions/checkout@v5
+        with:
+          repository: MALIEV-Co-Ltd/maliev-gitops
+          token: ${{ secrets.GITOPS_PAT }}
+          path: maliev-gitops
+
+      - name: Install Kustomize
+        run: |
+          curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash
+          sudo mv kustomize /usr/local/bin/
+
+      - name: Update image tag in maliev-gitops using Kustomize
+        run: |
+          cd maliev-gitops/3-apps/maliev-compensation-service/overlays/development
+          kustomize edit set image asia-southeast1-docker.pkg.dev/maliev-website/maliev-website-artifact/maliev-compensation-service=asia-southeast1-docker.pkg.dev/maliev-website/maliev-website-artifact-dev/maliev-compensation-service:${{ github.sha }}
+
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ secrets.GITOPS_PAT }}
+          PR_BODY: |
+            Automated deployment of compensation-service to development environment.
+
+            Commit: ${{ github.sha }}
+            Triggered by: ${{ github.actor }}
+            Workflow: ${{ github.workflow }}
+        run: |
+          cd maliev-gitops
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+
+          BRANCH_NAME="compensation-service/dev-${{ github.sha }}"
+          git checkout -b $BRANCH_NAME
+
+          git add .
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+
+          git commit -m "Update compensation-service image to ${{ github.sha }}"
+          git push origin $BRANCH_NAME
+
+          gh pr create             --title "Deploy compensation-service ${{ github.sha }} to development"             --body "$PR_BODY"             --base main             --head $BRANCH_NAME             --repo MALIEV-Co-Ltd/maliev-gitops
