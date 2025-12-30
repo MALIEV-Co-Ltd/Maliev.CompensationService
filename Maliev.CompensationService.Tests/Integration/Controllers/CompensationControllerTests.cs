@@ -51,6 +51,17 @@ public class CompensationControllerTests : IClassFixture<WebApplicationFactory<P
 
             builder.ConfigureTestServices(services =>
             {
+                // Remove all IAM registration-related services to avoid connection errors in tests
+                var iamDescriptors = services
+                    .Where(d => d.ServiceType.Name.Contains("IAM") ||
+                                d.ImplementationType?.Name.Contains("IAM") == true)
+                    .ToList();
+
+                foreach (var descriptor in iamDescriptors)
+                {
+                    services.Remove(descriptor);
+                }
+
                 // Add MassTransit Test Harness (overrides real MassTransit/RabbitMQ)
                 services.AddMassTransitTestHarness();
 
