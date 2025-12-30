@@ -70,3 +70,5 @@ docker-compose.dev.yml
 # Test result files
 *test_results*.txt
 *_test_*.txt
+
+.gemini/
