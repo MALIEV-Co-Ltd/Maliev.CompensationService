@@ -1,0 +1,137 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://maliev.com/schemas/bulk-salary-increase-completed-event.json",
+  "title": "BulkSalaryIncreaseCompletedEvent",
+  "description": "Published when a bulk salary increase operation completes",
+  "type": "object",
+  "required": [
+    "jobId",
+    "status",
+    "successCount",
+    "failureCount",
+    "totalBudgetImpact"
+  ],
+  "properties": {
+    "jobId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Bulk job identifier"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["Completed", "Failed", "PartiallyCompleted"],
+      "description": "Final job status"
+    },
+    "successCount": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of employees successfully processed"
+    },
+    "failureCount": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of employees that failed processing"
+    },
+    "totalBudgetImpact": {
+      "type": "number",
+      "description": "Total salary increase amount across all employees"
+    },
+    "departmentId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Department identifier (if scoped to department)"
+    },
+    "increasePercentage": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Percentage increase applied"
+    },
+    "effectiveDate": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Effective date of salary increases"
+    },
+    "reason": {
+      "type": "string",
+      "description": "Reason for bulk increase"
+    },
+    "startedBy": {
+      "type": "string",
+      "format": "uuid",
+      "description": "User who initiated the bulk operation"
+    },
+    "startedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Job start timestamp"
+    },
+    "completedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Job completion timestamp"
+    },
+    "durationSeconds": {
+      "type": "integer",
+      "description": "Job execution duration in seconds"
+    },
+    "errorSummary": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "employeeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "error": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Summary of errors for failed employees"
+    }
+  },
+  "examples": [
+    {
+      "jobId": "2fa85f64-5717-4562-b3fc-2c963f66afa5",
+      "status": "Completed",
+      "successCount": 450,
+      "failureCount": 0,
+      "totalBudgetImpact": 157500.00,
+      "departmentId": "6fa85f64-5717-4562-b3fc-2c963f66afa9",
+      "increasePercentage": 3.5,
+      "effectiveDate": "2025-04-01T00:00:00Z",
+      "reason": "Annual cost of living adjustment",
+      "startedBy": "1fa85f64-5717-4562-b3fc-2c963f66afa1",
+      "startedAt": "2025-03-15T10:00:00Z",
+      "completedAt": "2025-03-15T10:08:23Z",
+      "durationSeconds": 503
+    },
+    {
+      "jobId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "status": "PartiallyCompleted",
+      "successCount": 445,
+      "failureCount": 5,
+      "totalBudgetImpact": 155750.00,
+      "departmentId": "6fa85f64-5717-4562-b3fc-2c963f66afa9",
+      "increasePercentage": 3.5,
+      "effectiveDate": "2025-04-01T00:00:00Z",
+      "reason": "Annual cost of living adjustment",
+      "startedBy": "1fa85f64-5717-4562-b3fc-2c963f66afa1",
+      "startedAt": "2025-03-15T10:00:00Z",
+      "completedAt": "2025-03-15T10:08:45Z",
+      "durationSeconds": 525,
+      "errorSummary": [
+        {
+          "employeeId": "7fa85f64-5717-4562-b3fc-2c963f66afa1",
+          "error": "Employee not found"
+        },
+        {
+          "employeeId": "8fa85f64-5717-4562-b3fc-2c963f66afa2",
+          "error": "Concurrent update conflict"
+        }
+      ]
+    }
+  ]
+}
