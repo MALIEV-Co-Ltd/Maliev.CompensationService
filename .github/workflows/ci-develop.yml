@@ -21,8 +21,8 @@ jobs:
       - name: Switch to PackageReference for CI build
         run: |
           # Replace ProjectReference with PackageReference in all service csproj files
-          find . -name "*.csproj" -type f -exec sed -i 's|<ProjectReference Include=".*Maliev.Aspire.ServiceDefaults.*.csproj" />|<PackageReference Include="Maliev.Aspire.ServiceDefaults" Version="1.0.*" />|g' {} \;
-          find . -name "*.csproj" -type f -exec sed -i 's|<ProjectReference Include=".*Maliev.MessagingContracts.*.csproj" />|<PackageReference Include="Maliev.MessagingContracts" Version="1.0.*" />|g' {} \;
+          find . -name "*.csproj" -type f -exec sed -i 's|<ProjectReference Include=".*Maliev.Aspire.ServiceDefaults.*.csproj" />|<PackageReference Include="Maliev.Aspire.ServiceDefaults" Version="1.0.*-*" />|g' {} \;
+          find . -name "*.csproj" -type f -exec sed -i 's|<ProjectReference Include=".*Maliev.MessagingContracts.*.csproj" />|<PackageReference Include="Maliev.MessagingContracts" Version="1.0.*-*" />|g' {} \;
           echo "Switched to PackageReference for ServiceDefaults and MessagingContracts"
 
           # Remove broken COPY instruction for Aspire ServiceDefaults from Dockerfile
