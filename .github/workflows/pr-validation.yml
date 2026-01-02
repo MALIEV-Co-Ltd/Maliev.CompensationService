@@ -20,15 +20,23 @@ jobs:
         with:
           dotnet-version: "10.x"
 
-      - name: Switch to PackageReference for CI build
+      - name: Switch to PackageReference for CI
         run: |
+          # Determine version format based on target branch
+          BASE_BRANCH="${{ github.base_ref }}"
+          if [ "$BASE_BRANCH" == "main" ]; then
+            VERSION_FORMAT="1.0.*"
+          else
+            VERSION_FORMAT="1.0.*-*"
+          fi
+          
+          echo "Target branch is $BASE_BRANCH. Using version format: $VERSION_FORMAT"
+          
           # Replace ProjectReference with PackageReference in all service csproj files
-          echo "Converting ProjectReferences to PackageReferences..."
-
-          # Replace ProjectReference with PackageReference in all service csproj files
-          find . -name "*.csproj" -type f -exec sed -i 's|<ProjectReference Include=".*Maliev.Aspire.ServiceDefaults.*.csproj" />|<PackageReference Include="Maliev.Aspire.ServiceDefaults" Version="1.0.*" />|Ig' {} \;
-
-
+          for file in $(find . -name "*.csproj"); do
+            sed -i "s|<ProjectReference Include=".*Maliev.Aspire.ServiceDefaults.*.csproj" />|<PackageReference Include=\"Maliev.Aspire.ServiceDefaults\" Version=\"$VERSION_FORMAT\" />|g" "$file"
+            sed -i "s|<ProjectReference Include=".*Maliev.MessagingContracts.*.csproj" />|<PackageReference Include=\"Maliev.MessagingContracts\" Version=\"$VERSION_FORMAT\" />|g" "$file"
+          done
           echo "Switched to PackageReference for ServiceDefaults and MessagingContracts"
 
       - name: Restore dependencies
