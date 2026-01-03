@@ -98,12 +98,21 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITOPS_PAT }}
           PR_BODY: |
-            Automated deployment of compensation-service to staging environment.
+            Automated GitOps Update
 
-            Release: $RELEASE_VERSION
-            Tag: ${{ github.ref }}
+            - **Service**: CompensationService
+            - **Environment**: Staging
+            - **Release**: ${{ github.ref_name }}
+            - **Image Tag**: ${{ github.ref_name }}
+            - **Commit**: ${{ github.sha }}
+
+            Updates maliev-compensation-service image in staging overlay.
+            This PR was automatically created by GitHub Actions.
+            Once merged, ArgoCD will automatically sync the changes to the maliev-staging namespace.
+
             Triggered by: ${{ github.actor }}
             Workflow: ${{ github.workflow }}
+            Run: [${{ github.run_id }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
         run: |
           cd maliev-gitops
           git config --global user.name 'github-actions[bot]'
@@ -119,7 +128,12 @@ jobs:
             exit 0
           fi
 
-          git commit -m "Update compensation-service image to $RELEASE_VERSION"
+          git commit -m "chore(staging): Update CompensationService image to $RELEASE_VERSION"
           git push origin $BRANCH_NAME
 
-          gh pr create             --title "Deploy compensation-service $RELEASE_VERSION to staging"             --body "$PR_BODY"             --base main             --head $BRANCH_NAME             --repo MALIEV-Co-Ltd/maliev-gitops
+          gh pr create \
+            --title "chore(staging): Update compensation-service" \
+            --body "$PR_BODY" \
+            --base main \
+            --head $BRANCH_NAME \
+            --repo MALIEV-Co-Ltd/maliev-gitops
