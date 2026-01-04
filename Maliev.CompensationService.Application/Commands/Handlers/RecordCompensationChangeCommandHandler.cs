@@ -93,7 +93,7 @@ public class RecordCompensationChangeCommandHandler : IRequestHandler<RecordComp
 
         await _historyRepository.AddAsync(history, cancellationToken);
 
-        await _publishEndpoint.Publish(new CompensationChangedEvent(
+        await _publishEndpoint.Publish(new SalaryChangedEvent(
             request.EmployeeId,
             newRecord.Id,
             request.Data.NewBaseSalary,

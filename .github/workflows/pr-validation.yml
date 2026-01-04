@@ -34,8 +34,8 @@ jobs:
           
           # Replace ProjectReference with PackageReference in all service csproj files
           for file in $(find . -name "*.csproj"); do
-            sed -i "s|<ProjectReference Include=".*Maliev.Aspire.ServiceDefaults.*.csproj" />|<PackageReference Include=\"Maliev.Aspire.ServiceDefaults\" Version=\"$VERSION_FORMAT\" />|g" "$file"
-            sed -i "s|<ProjectReference Include=".*Maliev.MessagingContracts.*.csproj" />|<PackageReference Include=\"Maliev.MessagingContracts\" Version=\"$VERSION_FORMAT\" />|g" "$file"
+            sed -i 's|<ProjectReference Include=".*Maliev.Aspire.ServiceDefaults.*.csproj" />|<PackageReference Include="Maliev.Aspire.ServiceDefaults" Version="'"$VERSION_FORMAT"'" />|g' "$file"
+            sed -i 's|<ProjectReference Include=".*Maliev.MessagingContracts.*.csproj" />|<PackageReference Include="Maliev.MessagingContracts" Version="'"$VERSION_FORMAT"'" />|g' "$file"
           done
           echo "Switched to PackageReference for ServiceDefaults and MessagingContracts"
 

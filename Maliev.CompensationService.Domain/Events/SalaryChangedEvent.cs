@@ -1,7 +1,7 @@
 namespace Maliev.CompensationService.Domain.Events;
 
 /// <summary>
-/// Integration event raised when an employee's compensation is changed.
+/// Integration event raised when an employee's salary is changed.
 /// </summary>
 /// <param name="EmployeeId">The unique identifier of the employee.</param>
 /// <param name="CompensationRecordId">The unique identifier of the compensation record.</param>
@@ -10,7 +10,7 @@ namespace Maliev.CompensationService.Domain.Events;
 /// <param name="ChangePercentage">The percentage of change.</param>
 /// <param name="EffectiveDate">The date the change takes effect.</param>
 /// <param name="ChangeReason">The reason for the change.</param>
-public record CompensationChangedEvent(
+public record SalaryChangedEvent(
     Guid EmployeeId,
     Guid CompensationRecordId,
     decimal NewSalary,

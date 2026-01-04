@@ -54,7 +54,7 @@ public class EnrollInBenefitCommandHandlerTests
         // Assert
         Assert.NotNull(result);
         _repositoryMock.Verify(r => r.AddEnrollmentAsync(It.IsAny<BenefitsEnrollment>(), It.IsAny<CancellationToken>()), Times.Once);
-        _publishMock.Verify(p => p.Publish(It.IsAny<BenefitsEnrollmentUpdatedEvent>(), It.IsAny<CancellationToken>()), Times.Once);
+        _publishMock.Verify(p => p.Publish(It.IsAny<BenefitEnrolledEvent>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
