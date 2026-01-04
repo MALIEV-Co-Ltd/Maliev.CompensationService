@@ -72,3 +72,6 @@ docker-compose.dev.yml
 *_test_*.txt
 
 .gemini/
+
+# Windows NUL device file (accidentally created by redirects)
+NUL

@@ -3,12 +3,12 @@ name: PR Validation
 on:
   pull_request:
     branches:
-      - main
       - develop
       - staging
+      - main
 
 jobs:
-  validate:
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,7 +20,7 @@ jobs:
         with:
           dotnet-version: "10.x"
 
-      - name: Switch to PackageReference for CI
+      - name: Switch to PackageReference for CI build
         run: |
           # Determine version format based on target branch
           BASE_BRANCH="${{ github.base_ref }}"
@@ -29,14 +29,16 @@ jobs:
           else
             VERSION_FORMAT="1.0.*-*"
           fi
-          
+
           echo "Target branch is $BASE_BRANCH. Using version format: $VERSION_FORMAT"
-          
+
           # Replace ProjectReference with PackageReference in all service csproj files
-          for file in $(find . -name "*.csproj"); do
-            sed -i 's|<ProjectReference Include=".*Maliev.Aspire.ServiceDefaults.*.csproj" />|<PackageReference Include="Maliev.Aspire.ServiceDefaults" Version="'"$VERSION_FORMAT"'" />|g' "$file"
-            sed -i 's|<ProjectReference Include=".*Maliev.MessagingContracts.*.csproj" />|<PackageReference Include="Maliev.MessagingContracts" Version="'"$VERSION_FORMAT"'" />|g' "$file"
-          done
+          find . -name "*.csproj" -type f -exec sed -i \
+            's|<ProjectReference Include=".*Maliev.Aspire.ServiceDefaults.*.csproj" />|<PackageReference Include="Maliev.Aspire.ServiceDefaults" Version="'$VERSION_FORMAT'" />|g' \
+            {} \;
+          find . -name "*.csproj" -type f -exec sed -i \
+            's|<ProjectReference Include=".*Maliev.MessagingContracts.*.csproj" />|<PackageReference Include="Maliev.MessagingContracts" Version="'$VERSION_FORMAT'" />|g' \
+            {} \;
           echo "Switched to PackageReference for ServiceDefaults and MessagingContracts"
 
       - name: Restore dependencies
@@ -46,7 +48,8 @@ jobs:
           NUGET_PASSWORD: ${{ secrets.GITOPS_PAT }}
 
       - name: Build
-        run: dotnet build Maliev.CompensationService.sln --no-restore
+        run: dotnet build Maliev.CompensationService.sln --no-restore --configuration Release
 
       - name: Test
-        run: dotnet test Maliev.CompensationService.sln --no-build --verbosity normal
+        run: dotnet test Maliev.CompensationService.sln --no-build --configuration Release --verbosity normal
+        working-directory: ${{ github.workspace }}

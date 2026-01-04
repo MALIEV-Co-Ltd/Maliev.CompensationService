@@ -1,4 +1,4 @@
-name: Release Candidate to Staging
+name: CI - Staging
 
 on:
   push:
@@ -21,30 +21,12 @@ jobs:
       - name: Switch to PackageReference for CI build
         run: |
           # Replace ProjectReference with PackageReference in all service csproj files
-          echo "Converting ProjectReferences to PackageReferences..."
-
-          for file in $(find . -name "*.csproj"); do
-            echo "Processing $file"
-
-            # Backup
-            cp "$file" "$file.bak"
-
-            # Replace Aspire ServiceDefaults
-            sed -i 's|<ProjectReference Include=".*Maliev.Aspire.ServiceDefaults.*.csproj" />|<PackageReference Include="Maliev.Aspire.ServiceDefaults" Version="1.0.*-*" />|g' "$file"
-
-            # Replace MessagingContracts (if present)
-            sed -i 's|<ProjectReference Include=".*Maliev.MessagingContracts.*.csproj" />|<PackageReference Include="Maliev.MessagingContracts" Version="1.0.*-*" />|g' "$file"
-
-            # Verify changes
-            if grep -q "ProjectReference.*Maliev.Aspire.ServiceDefaults" "$file"; then
-              echo "ERROR: Failed to replace Aspire.ServiceDefaults in $file"
-              exit 1
-            fi
-
-            # Show diff
-            diff "$file.bak" "$file" || true
-          done
-
+          find . -name "*.csproj" -type f -exec sed -i \
+            's|<ProjectReference Include=".*Maliev.Aspire.ServiceDefaults.*.csproj" />|<PackageReference Include="Maliev.Aspire.ServiceDefaults" Version="1.0.*-*" />|g' \
+            {} \;
+          find . -name "*.csproj" -type f -exec sed -i \
+            's|<ProjectReference Include=".*Maliev.MessagingContracts.*.csproj" />|<PackageReference Include="Maliev.MessagingContracts" Version="1.0.*-*" />|g' \
+            {} \;
           echo "Switched to PackageReference for ServiceDefaults and MessagingContracts"
 
       - name: Restore dependencies
@@ -58,6 +40,7 @@ jobs:
 
       - name: Test
         run: dotnet test Maliev.CompensationService.sln --no-build --verbosity normal
+        working-directory: ${{ github.workspace }}
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
@@ -73,7 +56,13 @@ jobs:
         run: |
           gcloud auth configure-docker asia-southeast1-docker.pkg.dev
           export RELEASE_VERSION=$(echo ${{ github.ref }} | sed -e 's,.*/v,,g')
-          NUGET_USERNAME=${{ github.actor }} NUGET_PASSWORD=${{ secrets.GITOPS_PAT }} docker build --secret id=nuget_username,env=NUGET_USERNAME --secret id=nuget_password,env=NUGET_PASSWORD -t asia-southeast1-docker.pkg.dev/maliev-website/maliev-website-artifact-staging/maliev-compensation-service:$RELEASE_VERSION -f Maliev.CompensationService.Api/Dockerfile .
+          NUGET_USERNAME=${{ github.actor }} \
+          NUGET_PASSWORD=${{ secrets.GITOPS_PAT }} \
+            docker build \
+            --secret id=nuget_username,env=NUGET_USERNAME \
+            --secret id=nuget_password,env=NUGET_PASSWORD \
+            -t asia-southeast1-docker.pkg.dev/maliev-website/maliev-website-artifact-staging/maliev-compensation-service:$RELEASE_VERSION \
+            -f Maliev.CompensationService.Api/Dockerfile .
           docker push asia-southeast1-docker.pkg.dev/maliev-website/maliev-website-artifact-staging/maliev-compensation-service:$RELEASE_VERSION
 
       - name: Checkout maliev-gitops repository
@@ -92,7 +81,9 @@ jobs:
         run: |
           export RELEASE_VERSION=$(echo ${{ github.ref }} | sed -e 's,.*/v,,g')
           cd maliev-gitops/3-apps/maliev-compensation-service/overlays/staging
-          kustomize edit set image asia-southeast1-docker.pkg.dev/maliev-website/maliev-website-artifact/maliev-compensation-service=asia-southeast1-docker.pkg.dev/maliev-website/maliev-website-artifact-staging/maliev-compensation-service:$RELEASE_VERSION
+          kustomize edit set image \
+            asia-southeast1-docker.pkg.dev/maliev-website/maliev-website-artifact/maliev-compensation-service=\
+          asia-southeast1-docker.pkg.dev/maliev-website/maliev-website-artifact-staging/maliev-compensation-service:$RELEASE_VERSION
 
       - name: Create Pull Request
         env:
@@ -118,10 +109,14 @@ jobs:
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
 
+          # Extract release version
           export RELEASE_VERSION=$(echo ${{ github.ref }} | sed -e 's,.*/v,,g')
+
+          # Create a new branch for this update
           BRANCH_NAME="compensation-service/staging-$RELEASE_VERSION"
           git checkout -b $BRANCH_NAME
 
+          # Commit and push changes to the new branch
           git add .
           if git diff --staged --quiet; then
             echo "No changes to commit"
@@ -131,6 +126,7 @@ jobs:
           git commit -m "chore(staging): Update CompensationService image to $RELEASE_VERSION"
           git push origin $BRANCH_NAME
 
+          # Create pull request using GitHub CLI
           gh pr create \
             --title "chore(staging): Update compensation-service" \
             --body "$PR_BODY" \
