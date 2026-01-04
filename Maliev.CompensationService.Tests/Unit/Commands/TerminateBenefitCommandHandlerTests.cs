@@ -44,6 +44,6 @@ public class TerminateBenefitCommandHandlerTests
         Assert.Equal(EnrollmentStatus.Terminated, enrollment.Status);
         Assert.Equal(terminationDate, enrollment.TerminationDate);
         _repositoryMock.Verify(r => r.UpdateEnrollmentAsync(It.IsAny<BenefitsEnrollment>(), It.IsAny<CancellationToken>()), Times.Once);
-        _publishMock.Verify(p => p.Publish(It.IsAny<BenefitsEnrollmentUpdatedEvent>(), It.IsAny<CancellationToken>()), Times.Once);
+        _publishMock.Verify(p => p.Publish(It.IsAny<BenefitEnrolledEvent>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 }

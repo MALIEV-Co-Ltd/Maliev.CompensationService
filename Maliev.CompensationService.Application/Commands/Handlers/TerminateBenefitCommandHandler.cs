@@ -41,7 +41,7 @@ public class TerminateBenefitCommandHandler : IRequestHandler<TerminateBenefitCo
         await _repository.UpdateEnrollmentAsync(enrollment, cancellationToken);
 
         // Publish event
-        await _publishEndpoint.Publish(new BenefitsEnrollmentUpdatedEvent(
+        await _publishEndpoint.Publish(new BenefitEnrolledEvent(
             enrollment.EmployeeId,
             enrollment.BenefitId,
             enrollment.Status.ToString(),

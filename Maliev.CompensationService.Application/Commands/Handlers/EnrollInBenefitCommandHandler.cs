@@ -58,7 +58,7 @@ public class EnrollInBenefitCommandHandler : IRequestHandler<EnrollInBenefitComm
         await _repository.AddEnrollmentAsync(enrollment, cancellationToken);
 
         // Publish event
-        await _publishEndpoint.Publish(new BenefitsEnrollmentUpdatedEvent(
+        await _publishEndpoint.Publish(new BenefitEnrolledEvent(
             enrollment.EmployeeId,
             enrollment.BenefitId,
             enrollment.Status.ToString(),

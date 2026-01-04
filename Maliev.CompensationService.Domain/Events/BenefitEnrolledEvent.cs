@@ -7,7 +7,7 @@ namespace Maliev.CompensationService.Domain.Events;
 /// <param name="BenefitId">Unique identifier of the benefit</param>
 /// <param name="Status">The new status of the enrollment (e.g., Active, Terminated)</param>
 /// <param name="EffectiveDate">The date when the change becomes effective</param>
-public record BenefitsEnrollmentUpdatedEvent(
+public record BenefitEnrolledEvent(
     Guid EmployeeId,
     Guid BenefitId,
     string Status,
