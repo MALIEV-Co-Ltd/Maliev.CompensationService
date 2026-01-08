@@ -4,7 +4,7 @@ using Maliev.CompensationService.Application.Mappers;
 using Maliev.CompensationService.Domain.Entities;
 using Maliev.CompensationService.Domain.Events;
 using MassTransit;
-using MediatR;
+using Maliev.CompensationService.Application.Common.Mediator;
 
 namespace Maliev.CompensationService.Application.Commands.Handlers;
 
@@ -71,8 +71,8 @@ public class RecordCompensationChangeCommandHandler : IRequestHandler<RecordComp
         await _compRepository.AddAsync(newRecord, cancellationToken);
 
         decimal changeAmount = request.Data.NewBaseSalary - previousSalary;
-        decimal changePercentage = previousSalary > 0 
-            ? (changeAmount / previousSalary) * 100 
+        decimal changePercentage = previousSalary > 0
+            ? (changeAmount / previousSalary) * 100
             : 0;
 
         var history = new SalaryHistory
