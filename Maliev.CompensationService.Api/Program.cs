@@ -1,3 +1,4 @@
+using Maliev.Aspire.ServiceDefaults;
 using Maliev.CompensationService.Api.Filters;
 using Maliev.CompensationService.Application.Interfaces;
 using Maliev.CompensationService.Application.Queries.Handlers;
@@ -7,6 +8,7 @@ using Maliev.CompensationService.Infrastructure.Repositories;
 using Maliev.CompensationService.Infrastructure.Services;
 using Maliev.CompensationService.Infrastructure.Consumers;
 using Microsoft.EntityFrameworkCore;
+using Maliev.CompensationService.Application.Common.Mediator;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,7 +21,7 @@ builder.AddStandardMiddleware(options =>
 {
     options.EnableRequestLogging = true;
 });
-builder.AddServiceMeters("compensation-service");
+builder.AddServiceMeters("compensation-meter");
 
 // Database
 builder.AddPostgresDbContext<CompensationDbContext>(connectionName: "CompensationDbContext");
@@ -58,8 +60,8 @@ builder.Services.AddControllers(options =>
     options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.SnakeCaseLower;
 });
 
-// --- Application Services ---
-builder.Services.AddSingleton<IEncryptionService, EncryptionService>();
+// IAM Service Client - Configure with service account authentication
+builder.Services.AddIAMClient(builder.Configuration, "Compensation");
 builder.Services.AddIAMRegistration<CompensationIAMRegistrationService>();
 
 builder.Services.AddScoped<ICompensationRepository, CompensationRepository>();
@@ -68,7 +70,26 @@ builder.Services.AddScoped<ISalaryHistoryRepository, SalaryHistoryRepository>();
 builder.Services.AddScoped<IBulkJobRepository, BulkJobRepository>();
 builder.Services.AddScoped<Maliev.CompensationService.Application.Commands.Handlers.UndoArchiveCompensationCommandHandler>();
 
-builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(GetCompensationDetailsQueryHandler).Assembly));
+// Register Mediator
+builder.Services.AddScoped<Maliev.CompensationService.Application.Common.Mediator.IMediator, Maliev.CompensationService.Application.Common.Mediator.Mediator>();
+
+// Register Handlers
+var assembly = typeof(GetCompensationDetailsQueryHandler).Assembly;
+var handlerTypes = assembly.GetTypes()
+    .Where(t => !t.IsAbstract && !t.IsInterface)
+    .Where(t => t.GetInterfaces().Any(i => i.IsGenericType && 
+        (i.GetGenericTypeDefinition() == typeof(Maliev.CompensationService.Application.Common.Mediator.IRequestHandler<,>) ||
+         i.GetGenericTypeDefinition() == typeof(Maliev.CompensationService.Application.Common.Mediator.IRequestHandler<>))));
+
+foreach (var handlerType in handlerTypes)
+{
+    foreach (var interfaceType in handlerType.GetInterfaces().Where(i => i.IsGenericType && 
+        (i.GetGenericTypeDefinition() == typeof(Maliev.CompensationService.Application.Common.Mediator.IRequestHandler<,>) ||
+         i.GetGenericTypeDefinition() == typeof(Maliev.CompensationService.Application.Common.Mediator.IRequestHandler<>))))
+    {
+        builder.Services.AddScoped(interfaceType, handlerType);
+    }
+}
 
 var app = builder.Build();
 
@@ -85,7 +106,10 @@ catch (Exception ex)
 
 // --- Middleware Pipeline ---
 app.UseStandardMiddleware();
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 app.UseRouting();
 app.UseCors();
 app.UseAuthentication();

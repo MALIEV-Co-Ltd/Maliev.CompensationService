@@ -3,7 +3,7 @@ using Maliev.CompensationService.Application.Commands;
 using Maliev.CompensationService.Application.DTOs;
 using Maliev.CompensationService.Application.Queries;
 using Maliev.CompensationService.Domain.Authorization;
-using MediatR;
+using Maliev.CompensationService.Application.Common.Mediator;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Maliev.CompensationService.Api.Controllers;
@@ -71,7 +71,7 @@ public class BenefitsController : ControllerBase
         [FromBody] EnrollInBenefitDto data,
         CancellationToken cancellationToken)
     {
-        var createdBy = Guid.Empty; // Should come from token
+        var createdBy = GetCurrentUserId();
         var command = new EnrollInBenefitCommand(employeeId, data, createdBy);
         var result = await _mediator.Send(command, cancellationToken);
 
@@ -119,5 +119,18 @@ public class BenefitsController : ControllerBase
         await _mediator.Send(command, cancellationToken);
 
         return NoContent();
+    }
+
+    private Guid GetCurrentUserId()
+    {
+        if (User.Identity?.IsAuthenticated == true)
+        {
+            var subClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (Guid.TryParse(subClaim, out var userId))
+            {
+                return userId;
+            }
+        }
+        return Guid.Empty;
     }
 }

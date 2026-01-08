@@ -14,21 +14,10 @@ namespace Maliev.CompensationService.Tests.Integration.Repositories;
 public class CompensationRepositoryTests
 {
     private readonly TestcontainersFixture _fixture;
-    private readonly IEncryptionService _encryptionService;
 
     public CompensationRepositoryTests(TestcontainersFixture fixture)
     {
         _fixture = fixture;
-        
-        var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["Encryption:Key"] = "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXY="
-            })
-            .Build();
-        
-        // I need a real encryption service to test transparency
-        _encryptionService = new Infrastructure.Services.EncryptionService(configuration);
     }
 
     private CompensationDbContext CreateContext()
@@ -37,11 +26,11 @@ public class CompensationRepositoryTests
             .UseNpgsql(_fixture.PostgreSqlContainer.GetConnectionString())
             .Options;
         
-        return new CompensationDbContext(options, _encryptionService);
+        return new CompensationDbContext(options);
     }
 
     [Fact]
-    public async Task AddAsync_ShouldEncryptSalaryInDatabase()
+    public async Task AddAsync_ShouldStoreSalaryInDatabase()
     {
         // Arrange
         var context = CreateContext();
@@ -65,22 +54,18 @@ public class CompensationRepositoryTests
         using (var conn = new Npgsql.NpgsqlConnection(_fixture.PostgreSqlContainer.GetConnectionString()))
         {
             await conn.OpenAsync();
-            using (var cmd = new Npgsql.NpgsqlCommand($"SELECT base_salary_encrypted FROM compensation_records WHERE employee_id = '{employeeId}'", conn))
+            using (var cmd = new Npgsql.NpgsqlCommand($"SELECT base_salary FROM compensation_records WHERE employee_id = '{employeeId}'", conn))
             {
-                var rawValue = await cmd.ExecuteScalarAsync() as string;
+                var rawValue = await cmd.ExecuteScalarAsync();
                 Assert.NotNull(rawValue);
-                Assert.NotEqual("75000.00", rawValue);
-                Assert.NotEqual("75000", rawValue);
-                
-                // Decrypt manually to verify
-                var decrypted = _encryptionService.Decrypt(rawValue);
-                Assert.Equal("75000.00", decrypted);
+                // Should be stored as decimal/numeric now (Plain text)
+                Assert.Equal(75000m, Convert.ToDecimal(rawValue));
             }
         }
     }
 
     [Fact]
-    public async Task GetByEmployeeIdAsync_ShouldDecryptSalary()
+    public async Task GetByEmployeeIdAsync_ShouldRetrieveSalary()
     {
         // Arrange
         var context = CreateContext();
