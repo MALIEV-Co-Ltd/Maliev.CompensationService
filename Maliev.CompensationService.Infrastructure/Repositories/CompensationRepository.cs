@@ -43,6 +43,15 @@ public class CompensationRepository : ICompensationRepository
     }
 
     /// <inheritdoc/>
+    public async Task<CompensationRecord?> GetMostRecentRecordAsync(Guid employeeId, CancellationToken cancellationToken = default)
+    {
+        return await _context.Set<CompensationRecord>()
+            .Where(r => r.EmployeeId == employeeId)
+            .OrderByDescending(r => r.CreatedDate)
+            .FirstOrDefaultAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
     public async Task AddAsync(CompensationRecord record, CancellationToken cancellationToken = default)
     {
         await _context.Set<CompensationRecord>().AddAsync(record, cancellationToken);

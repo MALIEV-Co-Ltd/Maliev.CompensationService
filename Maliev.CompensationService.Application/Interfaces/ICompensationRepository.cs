@@ -24,6 +24,14 @@ public interface ICompensationRepository
     Task<IEnumerable<CompensationRecord>> GetAllCurrentAsync(Guid? departmentId = null, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Gets the most recent compensation record for an employee, regardless of whether it is current
+    /// </summary>
+    /// <param name="employeeId">Unique identifier of the employee</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The most recent compensation record, or null if not found</returns>
+    Task<CompensationRecord?> GetMostRecentRecordAsync(Guid employeeId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Adds a new compensation record
     /// </summary>
     /// <param name="record">The record to add</param>

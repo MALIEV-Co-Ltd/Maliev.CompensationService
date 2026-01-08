@@ -14,7 +14,7 @@ namespace Maliev.CompensationService.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("compensation/v1/employees")]
-public class CompensationController : ControllerBase
+public class CompensationController : BaseController
 {
     private readonly IMediator _mediator;
 
@@ -186,17 +186,5 @@ public class CompensationController : ControllerBase
         var result = await _mediator.Send(request, cancellationToken);
         return Ok(result);
     }
-
-    private Guid GetCurrentUserId()
-    {
-        if (User.Identity?.IsAuthenticated == true)
-        {
-            var subClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (Guid.TryParse(subClaim, out var userId))
-            {
-                return userId;
-            }
-        }
-        return Guid.Empty;
-    }
 }
+

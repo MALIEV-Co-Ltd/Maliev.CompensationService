@@ -5,8 +5,11 @@ using Maliev.CompensationService.Domain.Enums;
 using MassTransit;
 using Maliev.CompensationService.Application.Common.Mediator;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 using System.Text.Json;
 using Maliev.CompensationService.Domain.Events;
+using Maliev.CompensationService.Application.DTOs;
+using Maliev.CompensationService.Application.Commands;
 
 namespace Maliev.CompensationService.Application.Commands.Handlers;
 
@@ -20,6 +23,7 @@ public class BulkSalaryIncreaseCommandHandler : IRequestHandler<BulkSalaryIncrea
     private readonly IBulkJobRepository _bulkJobRepository;
     private readonly IPublishEndpoint _publishEndpoint;
     private readonly ILogger<BulkSalaryIncreaseCommandHandler> _logger;
+    private readonly IConfiguration _configuration;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BulkSalaryIncreaseCommandHandler"/> class.
@@ -29,13 +33,15 @@ public class BulkSalaryIncreaseCommandHandler : IRequestHandler<BulkSalaryIncrea
         ISalaryHistoryRepository historyRepository,
         IBulkJobRepository bulkJobRepository,
         IPublishEndpoint publishEndpoint,
-        ILogger<BulkSalaryIncreaseCommandHandler> logger)
+        ILogger<BulkSalaryIncreaseCommandHandler> logger,
+        IConfiguration configuration)
     {
         _compRepository = compRepository;
         _historyRepository = historyRepository;
         _bulkJobRepository = bulkJobRepository;
         _publishEndpoint = publishEndpoint;
         _logger = logger;
+        _configuration = configuration;
     }
 
     /// <inheritdoc/>
@@ -59,10 +65,13 @@ public class BulkSalaryIncreaseCommandHandler : IRequestHandler<BulkSalaryIncrea
         };
         await _bulkJobRepository.AddAsync(job, cancellationToken);
 
+        var threshold = _configuration.GetValue<decimal>("CompensationSettings:HighIncreaseThreshold", 25);
+        var previewRecords = await _compRepository.GetAllCurrentAsync(request.DepartmentId, cancellationToken);
+        var defaultCurrency = previewRecords.FirstOrDefault()?.Currency ?? "N/A";
+
         if (request.PreviewOnly)
         {
             // Just count eligibility and return
-            var previewRecords = await _compRepository.GetAllCurrentAsync(request.DepartmentId, cancellationToken);
             job.Status = BulkJobStatus.Completed;
             job.SuccessCount = previewRecords.Count(); // In preview, success count is just matching records
             job.CompletedAt = DateTime.UtcNow;
@@ -72,12 +81,12 @@ public class BulkSalaryIncreaseCommandHandler : IRequestHandler<BulkSalaryIncrea
             { 
                 TotalEmployeesProcessed = job.SuccessCount,
                 TotalIncreaseAmount = previewRecords.Sum(r => r.BaseSalary * (request.PercentageIncrease / 100)),
-                Currency = "USD"
+                Currency = defaultCurrency
             };
         }
 
         // 2. Fetch Eligible Employees
-        var eligibleRecords = await _compRepository.GetAllCurrentAsync(request.DepartmentId, cancellationToken);
+        var eligibleRecords = previewRecords;
         var processedCount = 0;
         var failedCount = 0;
         decimal totalIncrease = 0;
@@ -126,7 +135,7 @@ public class BulkSalaryIncreaseCommandHandler : IRequestHandler<BulkSalaryIncrea
                     NewSalary = newSalary,
                     ChangeAmount = increaseAmount,
                     ChangePercentage = request.PercentageIncrease,
-                    IsHighIncrease = request.PercentageIncrease > 25,
+                    IsHighIncrease = request.PercentageIncrease > threshold,
                     EffectiveDate = request.EffectiveDate,
                     ChangeType = "BulkIncrease",
                     ChangedBy = request.InitiatedByUserId,
@@ -178,7 +187,7 @@ public class BulkSalaryIncreaseCommandHandler : IRequestHandler<BulkSalaryIncrea
         {
             TotalEmployeesProcessed = processedCount,
             TotalIncreaseAmount = totalIncrease,
-            Currency = "USD"
+            Currency = defaultCurrency
         };
     }
 }

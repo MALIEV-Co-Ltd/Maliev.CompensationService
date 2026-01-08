@@ -13,7 +13,7 @@ namespace Maliev.CompensationService.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("compensation/v1/employees")]
-public class BenefitsController : ControllerBase
+public class BenefitsController : BaseController
 {
     private readonly IMediator _mediator;
 
@@ -120,17 +120,5 @@ public class BenefitsController : ControllerBase
 
         return NoContent();
     }
-
-    private Guid GetCurrentUserId()
-    {
-        if (User.Identity?.IsAuthenticated == true)
-        {
-            var subClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (Guid.TryParse(subClaim, out var userId))
-            {
-                return userId;
-            }
-        }
-        return Guid.Empty;
-    }
 }
+

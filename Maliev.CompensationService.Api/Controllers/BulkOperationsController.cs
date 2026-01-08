@@ -13,7 +13,7 @@ namespace Maliev.CompensationService.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("compensation/v1/bulk")]
-public class BulkOperationsController : ControllerBase
+public class BulkOperationsController : BaseController
 {
     private readonly IMediator _mediator;
 
@@ -75,17 +75,5 @@ public class BulkOperationsController : ControllerBase
 
         return Ok(result);
     }
-
-    private Guid GetCurrentUserId()
-    {
-        if (User.Identity?.IsAuthenticated == true)
-        {
-            var subClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (Guid.TryParse(subClaim, out var userId))
-            {
-                return userId;
-            }
-        }
-        return Guid.Empty;
-    }
 }
+
