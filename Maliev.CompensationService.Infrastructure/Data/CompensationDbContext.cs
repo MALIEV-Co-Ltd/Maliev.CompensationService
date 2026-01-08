@@ -8,19 +8,13 @@ namespace Maliev.CompensationService.Infrastructure.Data;
 /// </summary>
 public class CompensationDbContext : DbContext
 {
-    private readonly IEncryptionService _encryptionService;
-
     /// <summary>
     /// Initializes a new instance of the <see cref="CompensationDbContext"/> class.
     /// </summary>
     /// <param name="options">The options for this context.</param>
-    /// <param name="encryptionService">The encryption service for sensitive data.</param>
-    public CompensationDbContext(
-        DbContextOptions<CompensationDbContext> options,
-        IEncryptionService encryptionService)
+    public CompensationDbContext(DbContextOptions<CompensationDbContext> options)
         : base(options)
     {
-        _encryptionService = encryptionService;
     }
 
     /// <inheritdoc/>
@@ -28,15 +22,12 @@ public class CompensationDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        var decimalConverter = new EncryptionValueConverter(_encryptionService);
-        var stringConverter = new StringEncryptionValueConverter(_encryptionService);
-
-        // Manually apply configurations that need dependencies
-        modelBuilder.ApplyConfiguration(new Configurations.CompensationRecordConfiguration(decimalConverter));
-        modelBuilder.ApplyConfiguration(new Configurations.SalaryHistoryConfiguration(decimalConverter));
+        // Manually apply configurations
+        modelBuilder.ApplyConfiguration(new Configurations.CompensationRecordConfiguration());
+        modelBuilder.ApplyConfiguration(new Configurations.SalaryHistoryConfiguration());
         modelBuilder.ApplyConfiguration(new Configurations.BenefitConfiguration());
         modelBuilder.ApplyConfiguration(new Configurations.BenefitsEnrollmentConfiguration());
-        modelBuilder.ApplyConfiguration(new Configurations.DependentConfiguration(stringConverter));
+        modelBuilder.ApplyConfiguration(new Configurations.DependentConfiguration());
         modelBuilder.ApplyConfiguration(new Configurations.BulkJobConfiguration());
     }
 

@@ -26,9 +26,9 @@ public class EmployeeCreatedEventConsumer : IConsumer<EmployeeCreatedEvent>
         var @event = context.Message;
         var payload = @event.Payload; // Access payload
 
-        _logger.LogInformation("New employee created: {EmployeeId} ({EmployeeNumber}). Preparing compensation setup.", 
+        _logger.LogInformation("New employee created: {EmployeeId} ({EmployeeNumber}). Preparing compensation setup.",
             payload.EmployeeId, payload.EmployeeNumber);
-        
+
         return Task.CompletedTask;
     }
 }

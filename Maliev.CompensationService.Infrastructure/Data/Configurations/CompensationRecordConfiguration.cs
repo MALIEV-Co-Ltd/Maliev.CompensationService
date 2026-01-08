@@ -10,17 +10,6 @@ namespace Maliev.CompensationService.Infrastructure.Data.Configurations;
 /// </summary>
 public class CompensationRecordConfiguration : IEntityTypeConfiguration<CompensationRecord>
 {
-    private readonly EncryptionValueConverter _encryptionConverter;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="CompensationRecordConfiguration"/> class.
-    /// </summary>
-    /// <param name="encryptionConverter">The encryption converter.</param>
-    public CompensationRecordConfiguration(EncryptionValueConverter encryptionConverter)
-    {
-        _encryptionConverter = encryptionConverter;
-    }
-
     /// <inheritdoc/>
     public void Configure(EntityTypeBuilder<CompensationRecord> builder)
     {
@@ -44,8 +33,7 @@ public class CompensationRecordConfiguration : IEntityTypeConfiguration<Compensa
             .IsRequired();
 
         builder.Property(e => e.BaseSalary)
-            .HasColumnName("base_salary_encrypted")
-            .HasConversion(_encryptionConverter)
+            .HasColumnName("base_salary")
             .IsRequired();
 
         builder.Property(e => e.Currency)
@@ -88,7 +76,7 @@ public class CompensationRecordConfiguration : IEntityTypeConfiguration<Compensa
 
         builder.HasIndex(e => e.EmployeeId)
             .HasDatabaseName("idx_comp_records_employee");
-        
+
         builder.HasIndex(e => new { e.EmployeeId, e.IsCurrent })
             .HasDatabaseName("idx_comp_records_current")
             .IsUnique()
