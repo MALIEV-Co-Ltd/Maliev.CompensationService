@@ -5,7 +5,7 @@ using Maliev.CompensationService.Domain.Entities;
 using Maliev.CompensationService.Domain.Enums;
 using Maliev.CompensationService.Domain.Events;
 using MassTransit;
-using MediatR;
+using Maliev.CompensationService.Application.Common.Mediator;
 
 namespace Maliev.CompensationService.Application.Commands.Handlers;
 
@@ -40,7 +40,7 @@ public class EnrollInBenefitCommandHandler : IRequestHandler<EnrollInBenefitComm
 
         // We assume the benefit existence is validated by foreign key or a separate check if needed
         // For simplicity we'll just create the enrollment
-        
+
         var enrollmentId = Guid.NewGuid();
         var enrollment = new BenefitsEnrollment
         {

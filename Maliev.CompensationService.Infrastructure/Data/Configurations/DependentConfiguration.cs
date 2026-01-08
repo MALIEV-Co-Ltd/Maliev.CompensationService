@@ -10,17 +10,6 @@ namespace Maliev.CompensationService.Infrastructure.Data.Configurations;
 /// </summary>
 public class DependentConfiguration : IEntityTypeConfiguration<Dependent>
 {
-    private readonly StringEncryptionValueConverter _encryptionConverter;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="DependentConfiguration"/> class
-    /// </summary>
-    /// <param name="encryptionConverter">The encryption converter</param>
-    public DependentConfiguration(StringEncryptionValueConverter encryptionConverter)
-    {
-        _encryptionConverter = encryptionConverter;
-    }
-
     /// <inheritdoc />
     public void Configure(EntityTypeBuilder<Dependent> builder)
     {
@@ -55,8 +44,7 @@ public class DependentConfiguration : IEntityTypeConfiguration<Dependent>
             .IsRequired();
 
         builder.Property(e => e.NationalId)
-            .HasColumnName("national_id_encrypted")
-            .HasConversion(_encryptionConverter);
+            .HasColumnName("national_id");
 
         builder.Property(e => e.CreatedDate)
             .HasColumnName("created_date")

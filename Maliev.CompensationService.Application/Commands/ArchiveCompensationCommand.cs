@@ -1,6 +1,6 @@
-using MediatR;
+using Maliev.CompensationService.Application.Common.Mediator;
 
-namespace Maliev.CompensationService.Domain.Commands;
+namespace Maliev.CompensationService.Application.Commands;
 
 /// <summary>
 /// Saga command to archive an employee's compensation records.

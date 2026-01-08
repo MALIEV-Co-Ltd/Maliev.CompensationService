@@ -2,7 +2,7 @@ using Maliev.CompensationService.Application.Interfaces;
 using Maliev.CompensationService.Domain.Enums;
 using Maliev.CompensationService.Domain.Events;
 using MassTransit;
-using MediatR;
+using Maliev.CompensationService.Application.Common.Mediator;
 
 namespace Maliev.CompensationService.Application.Commands.Handlers;
 
@@ -26,7 +26,7 @@ public class TerminateBenefitCommandHandler : IRequestHandler<TerminateBenefitCo
     }
 
     /// <inheritdoc />
-    public async Task Handle(TerminateBenefitCommand request, CancellationToken cancellationToken)
+    public async Task<Unit> Handle(TerminateBenefitCommand request, CancellationToken cancellationToken)
     {
         var enrollment = await _repository.GetEnrollmentByIdAsync(request.EnrollmentId, cancellationToken);
         if (enrollment == null || enrollment.EmployeeId != request.EmployeeId)
@@ -47,5 +47,7 @@ public class TerminateBenefitCommandHandler : IRequestHandler<TerminateBenefitCo
             enrollment.Status.ToString(),
             request.TerminationDate
         ), cancellationToken);
+
+        return Unit.Value;
     }
 }

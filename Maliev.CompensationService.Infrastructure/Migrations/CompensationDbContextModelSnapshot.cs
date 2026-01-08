@@ -8,7 +8,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Maliev.CompensationService.Infrastructure.Data.Migrations
+namespace Maliev.CompensationService.Infrastructure.Migrations
 {
     [DbContext(typeof(CompensationDbContext))]
     partial class CompensationDbContextModelSnapshot : ModelSnapshot
@@ -228,10 +228,9 @@ namespace Maliev.CompensationService.Infrastructure.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("approved_by");
 
-                    b.Property<string>("BaseSalary")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("base_salary_encrypted");
+                    b.Property<decimal>("BaseSalary")
+                        .HasColumnType("numeric")
+                        .HasColumnName("base_salary");
 
                     b.Property<decimal?>("BonusPercentage")
                         .HasColumnType("numeric")
@@ -341,7 +340,7 @@ namespace Maliev.CompensationService.Infrastructure.Data.Migrations
                     b.Property<string>("NationalId")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)")
-                        .HasColumnName("national_id_encrypted");
+                        .HasColumnName("national_id");
 
                     b.Property<int>("Relationship")
                         .HasColumnType("integer")
@@ -402,15 +401,13 @@ namespace Maliev.CompensationService.Infrastructure.Data.Migrations
                         .HasDefaultValue(false)
                         .HasColumnName("is_high_increase");
 
-                    b.Property<string>("NewSalary")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("new_salary_encrypted");
+                    b.Property<decimal>("NewSalary")
+                        .HasColumnType("numeric")
+                        .HasColumnName("new_salary");
 
-                    b.Property<string>("PreviousSalary")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("previous_salary_encrypted");
+                    b.Property<decimal>("PreviousSalary")
+                        .HasColumnType("numeric")
+                        .HasColumnName("previous_salary");
 
                     b.HasKey("Id");
 

@@ -3,7 +3,7 @@ using Maliev.CompensationService.Application.Commands;
 using Maliev.CompensationService.Application.DTOs;
 using Maliev.CompensationService.Application.Queries;
 using Maliev.CompensationService.Domain.Authorization;
-using MediatR;
+using Maliev.CompensationService.Application.Common.Mediator;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Maliev.CompensationService.Api.Controllers;
@@ -13,7 +13,7 @@ namespace Maliev.CompensationService.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("compensation/v1/employees")]
-public class BenefitsController : ControllerBase
+public class BenefitsController : BaseController
 {
     private readonly IMediator _mediator;
 
@@ -71,7 +71,7 @@ public class BenefitsController : ControllerBase
         [FromBody] EnrollInBenefitDto data,
         CancellationToken cancellationToken)
     {
-        var createdBy = Guid.Empty; // Should come from token
+        var createdBy = GetCurrentUserId();
         var command = new EnrollInBenefitCommand(employeeId, data, createdBy);
         var result = await _mediator.Send(command, cancellationToken);
 
@@ -121,3 +121,4 @@ public class BenefitsController : ControllerBase
         return NoContent();
     }
 }
+

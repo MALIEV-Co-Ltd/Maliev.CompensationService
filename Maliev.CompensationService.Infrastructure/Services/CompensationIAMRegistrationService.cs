@@ -12,8 +12,11 @@ public class CompensationIAMRegistrationService : IAMRegistrationService
     /// <summary>
     /// Initializes a new instance of the <see cref="CompensationIAMRegistrationService"/> class
     /// </summary>
-    public CompensationIAMRegistrationService(IHttpClientFactory httpClientFactory, ILogger<CompensationIAMRegistrationService> logger)
-        : base(httpClientFactory, logger, "CompensationService")
+    /// <param name="httpClientFactory">Factory for creating HTTP clients.</param>
+    /// <param name="tokenProvider">Service account token provider.</param>
+    /// <param name="logger">Logger instance.</param>
+    public CompensationIAMRegistrationService(IHttpClientFactory httpClientFactory, IServiceAccountTokenProvider tokenProvider, ILogger<CompensationIAMRegistrationService> logger)
+        : base(httpClientFactory, tokenProvider, logger, "compensation")
     {
     }
 

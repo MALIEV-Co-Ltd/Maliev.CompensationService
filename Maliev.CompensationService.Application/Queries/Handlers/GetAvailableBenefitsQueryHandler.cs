@@ -2,7 +2,7 @@ using System.Text.Json;
 using Maliev.CompensationService.Application.DTOs;
 using Maliev.CompensationService.Application.Interfaces;
 using Maliev.CompensationService.Application.Mappers;
-using MediatR;
+using Maliev.CompensationService.Application.Common.Mediator;
 using Microsoft.Extensions.Caching.Distributed;
 
 namespace Maliev.CompensationService.Application.Queries.Handlers;

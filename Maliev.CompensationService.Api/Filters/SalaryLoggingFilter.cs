@@ -29,7 +29,7 @@ public class SalaryLoggingFilter : IAsyncActionFilter
         // Log basic request info without sensitive data
         var actionName = context.ActionDescriptor.DisplayName;
         var userId = context.HttpContext.User.Identity?.Name ?? "Anonymous";
-        
+
         _logger.LogInformation("Executing action {ActionName} for user {UserId}", actionName, userId);
 
         await next();

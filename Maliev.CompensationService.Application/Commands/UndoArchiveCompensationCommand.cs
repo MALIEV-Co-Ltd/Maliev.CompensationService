@@ -1,4 +1,4 @@
-namespace Maliev.CompensationService.Domain.Commands;
+namespace Maliev.CompensationService.Application.Commands;
 
 /// <summary>
 /// Command to undo the archival of a compensation record.

@@ -3,7 +3,7 @@ using Maliev.CompensationService.Application.Commands;
 using Maliev.CompensationService.Application.DTOs;
 using Maliev.CompensationService.Application.Queries;
 using Maliev.CompensationService.Domain.Authorization;
-using MediatR;
+using Maliev.CompensationService.Application.Common.Mediator;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Maliev.CompensationService.Api.Controllers;
@@ -13,7 +13,7 @@ namespace Maliev.CompensationService.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("compensation/v1/bulk")]
-public class BulkOperationsController : ControllerBase
+public class BulkOperationsController : BaseController
 {
     private readonly IMediator _mediator;
 
@@ -38,7 +38,7 @@ public class BulkOperationsController : ControllerBase
         [FromBody] BulkSalaryIncreaseDto data,
         CancellationToken cancellationToken)
     {
-        var startedBy = Guid.Empty; // Should come from token
+        var startedBy = GetCurrentUserId();
         var command = new BulkSalaryIncreaseCommand
         {
             DepartmentId = data.DepartmentId,
@@ -76,3 +76,4 @@ public class BulkOperationsController : ControllerBase
         return Ok(result);
     }
 }
+

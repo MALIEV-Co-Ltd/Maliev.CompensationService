@@ -1,8 +1,7 @@
+using Maliev.CompensationService.Application.Common.Mediator;
 using Maliev.CompensationService.Application.Interfaces;
-using Maliev.CompensationService.Domain.Commands;
 using Maliev.CompensationService.Domain.IntegrationEvents;
 using MassTransit;
-using MediatR;
 using Microsoft.Extensions.Logging;
 
 namespace Maliev.CompensationService.Application.Commands.Handlers;
@@ -35,7 +34,7 @@ public class ArchiveCompensationCommandHandler : IRequestHandler<ArchiveCompensa
     /// <inheritdoc/>
     public async Task<bool> Handle(ArchiveCompensationCommand request, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("Archiving compensation for employee {EmployeeId} (Correlation: {CorrelationId})", 
+        _logger.LogInformation("Archiving compensation for employee {EmployeeId} (Correlation: {CorrelationId})",
             request.EmployeeId, request.CorrelationId);
 
         var currentRecord = await _compRepository.GetByEmployeeIdAsync(request.EmployeeId, cancellationToken);

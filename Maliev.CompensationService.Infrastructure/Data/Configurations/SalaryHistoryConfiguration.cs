@@ -10,17 +10,6 @@ namespace Maliev.CompensationService.Infrastructure.Data.Configurations;
 /// </summary>
 public class SalaryHistoryConfiguration : IEntityTypeConfiguration<SalaryHistory>
 {
-    private readonly EncryptionValueConverter _encryptionConverter;
-
-    /// <summary>
-    /// Initializes a new instance of the <see cref="SalaryHistoryConfiguration"/> class.
-    /// </summary>
-    /// <param name="encryptionConverter">The encryption converter.</param>
-    public SalaryHistoryConfiguration(EncryptionValueConverter encryptionConverter)
-    {
-        _encryptionConverter = encryptionConverter;
-    }
-
     /// <inheritdoc/>
     public void Configure(EntityTypeBuilder<SalaryHistory> builder)
     {
@@ -40,13 +29,11 @@ public class SalaryHistoryConfiguration : IEntityTypeConfiguration<SalaryHistory
             .IsRequired();
 
         builder.Property(e => e.PreviousSalary)
-            .HasColumnName("previous_salary_encrypted")
-            .HasConversion(_encryptionConverter)
+            .HasColumnName("previous_salary")
             .IsRequired();
 
         builder.Property(e => e.NewSalary)
-            .HasColumnName("new_salary_encrypted")
-            .HasConversion(_encryptionConverter)
+            .HasColumnName("new_salary")
             .IsRequired();
 
         builder.Property(e => e.ChangeAmount)

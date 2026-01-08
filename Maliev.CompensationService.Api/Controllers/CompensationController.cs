@@ -3,7 +3,7 @@ using Maliev.CompensationService.Application.Commands;
 using Maliev.CompensationService.Application.DTOs;
 using Maliev.CompensationService.Application.Queries;
 using Maliev.CompensationService.Domain.Authorization;
-using MediatR;
+using Maliev.CompensationService.Application.Common.Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -14,7 +14,7 @@ namespace Maliev.CompensationService.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("compensation/v1/employees")]
-public class CompensationController : ControllerBase
+public class CompensationController : BaseController
 {
     private readonly IMediator _mediator;
 
@@ -186,17 +186,5 @@ public class CompensationController : ControllerBase
         var result = await _mediator.Send(request, cancellationToken);
         return Ok(result);
     }
-
-    private Guid GetCurrentUserId()
-    {
-        if (User.Identity?.IsAuthenticated == true)
-        {
-            var subClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            if (Guid.TryParse(subClaim, out var userId))
-            {
-                return userId;
-            }
-        }
-        return Guid.Empty;
-    }
 }
+

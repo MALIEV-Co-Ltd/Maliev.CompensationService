@@ -9,11 +9,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Maliev.CompensationService.Infrastructure.Data.Migrations
+namespace Maliev.CompensationService.Infrastructure.Migrations
 {
     [DbContext(typeof(CompensationDbContext))]
-    [Migration("20251229062316_AddBenefitsTables")]
-    partial class AddBenefitsTables
+    [Migration("20260108055822_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -69,6 +69,9 @@ namespace Maliev.CompensationService.Infrastructure.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("name");
+
+                    b.Property<int>("WaitingPeriodDays")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -146,6 +149,77 @@ namespace Maliev.CompensationService.Infrastructure.Data.Migrations
                     b.ToTable("benefits_enrollments", (string)null);
                 });
 
+            modelBuilder.Entity("Maliev.CompensationService.Domain.Entities.BulkJob", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("completed_at");
+
+                    b.Property<string>("ErrorDetails")
+                        .HasMaxLength(500)
+                        .HasColumnType("jsonb")
+                        .HasColumnName("error_details");
+
+                    b.Property<int>("FailureCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("failure_count");
+
+                    b.Property<string>("JobType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("job_type");
+
+                    b.Property<string>("Parameters")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("jsonb")
+                        .HasColumnName("parameters");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("started_at");
+
+                    b.Property<Guid>("StartedBy")
+                        .HasColumnType("uuid")
+                        .HasColumnName("started_by");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer")
+                        .HasColumnName("status");
+
+                    b.Property<int>("SuccessCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("success_count");
+
+                    b.Property<string>("WebhookUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("webhook_url");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StartedAt")
+                        .HasDatabaseName("idx_bulk_jobs_started_at");
+
+                    b.HasIndex("StartedBy")
+                        .HasDatabaseName("idx_bulk_jobs_started_by");
+
+                    b.HasIndex("Status")
+                        .HasDatabaseName("idx_bulk_jobs_status");
+
+                    b.ToTable("bulk_jobs", (string)null);
+                });
+
             modelBuilder.Entity("Maliev.CompensationService.Domain.Entities.CompensationRecord", b =>
                 {
                     b.Property<Guid>("Id")
@@ -157,10 +231,9 @@ namespace Maliev.CompensationService.Infrastructure.Data.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("approved_by");
 
-                    b.Property<string>("BaseSalary")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("base_salary_encrypted");
+                    b.Property<decimal>("BaseSalary")
+                        .HasColumnType("numeric")
+                        .HasColumnName("base_salary");
 
                     b.Property<decimal?>("BonusPercentage")
                         .HasColumnType("numeric")
@@ -190,6 +263,10 @@ namespace Maliev.CompensationService.Infrastructure.Data.Migrations
                         .HasColumnType("character varying(3)")
                         .HasDefaultValue("USD")
                         .HasColumnName("currency");
+
+                    b.Property<Guid>("DepartmentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("department_id");
 
                     b.Property<DateTime>("EffectiveDate")
                         .HasColumnType("timestamp with time zone")
@@ -266,7 +343,7 @@ namespace Maliev.CompensationService.Infrastructure.Data.Migrations
                     b.Property<string>("NationalId")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)")
-                        .HasColumnName("national_id_encrypted");
+                        .HasColumnName("national_id");
 
                     b.Property<int>("Relationship")
                         .HasColumnType("integer")
@@ -327,15 +404,13 @@ namespace Maliev.CompensationService.Infrastructure.Data.Migrations
                         .HasDefaultValue(false)
                         .HasColumnName("is_high_increase");
 
-                    b.Property<string>("NewSalary")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("new_salary_encrypted");
+                    b.Property<decimal>("NewSalary")
+                        .HasColumnType("numeric")
+                        .HasColumnName("new_salary");
 
-                    b.Property<string>("PreviousSalary")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("previous_salary_encrypted");
+                    b.Property<decimal>("PreviousSalary")
+                        .HasColumnType("numeric")
+                        .HasColumnName("previous_salary");
 
                     b.HasKey("Id");
 
