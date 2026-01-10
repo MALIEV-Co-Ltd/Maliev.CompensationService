@@ -67,7 +67,7 @@ public class BenefitsControllerTests : IClassFixture<WebApplicationFactory<Progr
         {
             var context = scope.ServiceProvider.GetRequiredService<CompensationDbContext>();
             await context.Database.EnsureCreatedAsync();
-            
+
             var benefit = new Benefit { Id = Guid.NewGuid(), Name = "Integration Health", BenefitType = BenefitType.HealthInsurance };
             context.Set<Benefit>().Add(benefit);
             await context.SaveChangesAsync();
@@ -109,10 +109,10 @@ public class BenefitsControllerTests : IClassFixture<WebApplicationFactory<Progr
         {
             var context = scope.ServiceProvider.GetRequiredService<CompensationDbContext>();
             await context.Database.EnsureCreatedAsync();
-            
+
             var benefit = new Benefit { Id = Guid.NewGuid(), Name = "Update Health", BenefitType = BenefitType.HealthInsurance };
             context.Set<Benefit>().Add(benefit);
-            
+
             var enrollment = new BenefitsEnrollment
             {
                 Id = Guid.NewGuid(),
@@ -155,10 +155,10 @@ public class BenefitsControllerTests : IClassFixture<WebApplicationFactory<Progr
         {
             var context = scope.ServiceProvider.GetRequiredService<CompensationDbContext>();
             await context.Database.EnsureCreatedAsync();
-            
+
             var benefit = new Benefit { Id = Guid.NewGuid(), Name = "Terminate Health", BenefitType = BenefitType.HealthInsurance };
             context.Set<Benefit>().Add(benefit);
-            
+
             var enrollment = new BenefitsEnrollment
             {
                 Id = Guid.NewGuid(),

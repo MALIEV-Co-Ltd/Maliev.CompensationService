@@ -3,6 +3,7 @@ using Maliev.CompensationService.Domain.Entities;
 using Maliev.CompensationService.Domain.Enums;
 using Maliev.CompensationService.Infrastructure.Data;
 using Maliev.CompensationService.Infrastructure.Repositories;
+using Maliev.CompensationService.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Moq;
@@ -14,10 +15,15 @@ namespace Maliev.CompensationService.Tests.Integration.Repositories;
 public class CompensationRepositoryTests
 {
     private readonly TestcontainersFixture _fixture;
+    private readonly IEncryptionService _encryptionService;
 
     public CompensationRepositoryTests(TestcontainersFixture fixture)
     {
         _fixture = fixture;
+
+        var configMock = new Mock<IConfiguration>();
+        configMock.Setup(c => c["Encryption:Key"]).Returns("MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXY=");
+        _encryptionService = new EncryptionService(configMock.Object);
     }
 
     private CompensationDbContext CreateContext()
@@ -25,12 +31,12 @@ public class CompensationRepositoryTests
         var options = new DbContextOptionsBuilder<CompensationDbContext>()
             .UseNpgsql(_fixture.PostgreSqlContainer.GetConnectionString())
             .Options;
-        
-        return new CompensationDbContext(options);
+
+        return new CompensationDbContext(options, _encryptionService);
     }
 
     [Fact]
-    public async Task AddAsync_ShouldStoreSalaryInDatabase()
+    public async Task AddAsync_ShouldStoreSalaryEncryptedInDatabase()
     {
         // Arrange
         var context = CreateContext();
@@ -58,14 +64,20 @@ public class CompensationRepositoryTests
             {
                 var rawValue = await cmd.ExecuteScalarAsync();
                 Assert.NotNull(rawValue);
-                // Should be stored as decimal/numeric now (Plain text)
-                Assert.Equal(75000m, Convert.ToDecimal(rawValue));
+
+                // Should NOT be equal to plain text salary
+                var rawString = rawValue.ToString();
+                Assert.NotEqual("75000", rawString);
+
+                // Should be decryptable back to 75000
+                var decrypted = _encryptionService.Decrypt(rawString);
+                Assert.Equal("75000", decrypted);
             }
         }
     }
 
     [Fact]
-    public async Task GetByEmployeeIdAsync_ShouldRetrieveSalary()
+    public async Task GetByEmployeeIdAsync_ShouldRetrieveSalaryDecrypted()
     {
         // Arrange
         var context = CreateContext();

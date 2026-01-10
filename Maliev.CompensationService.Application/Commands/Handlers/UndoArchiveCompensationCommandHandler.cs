@@ -51,7 +51,7 @@ public class UndoArchiveCompensationCommandHandler
         }
         else
         {
-             _logger.LogWarning("UNDO: No compensation records found for employee {EmployeeId} to restore.", command.EmployeeId);
+            _logger.LogWarning("UNDO: No compensation records found for employee {EmployeeId} to restore.", command.EmployeeId);
         }
     }
 }
