@@ -41,68 +41,71 @@ public class RecordCompensationChangeCommandHandler : IRequestHandler<RecordComp
     /// <returns>The created salary history DTO</returns>
     public async Task<SalaryHistoryDto> Handle(RecordCompensationChangeCommand request, CancellationToken cancellationToken)
     {
-        var currentRecord = await _compRepository.GetByEmployeeIdAsync(request.EmployeeId, cancellationToken);
-        decimal previousSalary = currentRecord?.BaseSalary ?? 0;
-
-        if (currentRecord != null)
+        return await _compRepository.ExecuteInTransactionAsync(async ct =>
         {
-            currentRecord.IsCurrent = false;
-            currentRecord.ModifiedDate = DateTime.UtcNow;
-            await _compRepository.UpdateAsync(currentRecord, cancellationToken);
-        }
+            var currentRecord = await _compRepository.GetByEmployeeIdAsync(request.EmployeeId, ct);
+            decimal previousSalary = currentRecord?.BaseSalary ?? 0;
 
-        var newRecord = new CompensationRecord
-        {
-            Id = Guid.NewGuid(),
-            EmployeeId = request.EmployeeId,
-            DepartmentId = currentRecord?.DepartmentId ?? Guid.Empty,
-            BaseSalary = request.Data.NewBaseSalary,
-            Currency = request.Data.Currency,
-            CompensationType = request.Data.CompensationType,
-            BonusPercentage = request.Data.BonusPercentage,
-            CommissionRate = request.Data.CommissionRate,
-            EffectiveDate = request.Data.EffectiveDate,
-            ChangeReason = request.Data.ChangeReason,
-            ApprovedBy = request.ChangedBy,
-            IsCurrent = true,
-            CreatedDate = DateTime.UtcNow
-        };
+            if (currentRecord != null)
+            {
+                currentRecord.IsCurrent = false;
+                currentRecord.ModifiedDate = DateTime.UtcNow;
+                await _compRepository.UpdateAsync(currentRecord, ct);
+            }
 
-        await _compRepository.AddAsync(newRecord, cancellationToken);
+            var newRecord = new CompensationRecord
+            {
+                Id = Guid.NewGuid(),
+                EmployeeId = request.EmployeeId,
+                DepartmentId = currentRecord?.DepartmentId ?? Guid.Empty,
+                BaseSalary = request.Data.NewBaseSalary,
+                Currency = request.Data.Currency,
+                CompensationType = request.Data.CompensationType,
+                BonusPercentage = request.Data.BonusPercentage,
+                CommissionRate = request.Data.CommissionRate,
+                EffectiveDate = request.Data.EffectiveDate,
+                ChangeReason = request.Data.ChangeReason,
+                ApprovedBy = request.ChangedBy,
+                IsCurrent = true,
+                CreatedDate = DateTime.UtcNow
+            };
 
-        decimal changeAmount = request.Data.NewBaseSalary - previousSalary;
-        decimal changePercentage = previousSalary > 0
-            ? (changeAmount / previousSalary) * 100
-            : 0;
+            await _compRepository.AddAsync(newRecord, ct);
 
-        var history = new SalaryHistory
-        {
-            Id = Guid.NewGuid(),
-            EmployeeId = request.EmployeeId,
-            CompensationRecordId = newRecord.Id,
-            PreviousSalary = previousSalary,
-            NewSalary = request.Data.NewBaseSalary,
-            ChangeAmount = changeAmount,
-            ChangePercentage = Math.Round(changePercentage, 2),
-            IsHighIncrease = changePercentage > 25,
-            EffectiveDate = request.Data.EffectiveDate,
-            ChangeType = request.Data.ChangeType,
-            ChangedBy = request.ChangedBy,
-            CreatedDate = DateTime.UtcNow
-        };
+            decimal changeAmount = request.Data.NewBaseSalary - previousSalary;
+            decimal changePercentage = previousSalary > 0
+                ? (changeAmount / previousSalary) * 100
+                : 0;
 
-        await _historyRepository.AddAsync(history, cancellationToken);
+            var history = new SalaryHistory
+            {
+                Id = Guid.NewGuid(),
+                EmployeeId = request.EmployeeId,
+                CompensationRecordId = newRecord.Id,
+                PreviousSalary = previousSalary,
+                NewSalary = request.Data.NewBaseSalary,
+                ChangeAmount = changeAmount,
+                ChangePercentage = Math.Round(changePercentage, 2),
+                IsHighIncrease = changePercentage > 25,
+                EffectiveDate = request.Data.EffectiveDate,
+                ChangeType = request.Data.ChangeType,
+                ChangedBy = request.ChangedBy,
+                CreatedDate = DateTime.UtcNow
+            };
 
-        await _publishEndpoint.Publish(new SalaryChangedEvent(
-            request.EmployeeId,
-            newRecord.Id,
-            request.Data.NewBaseSalary,
-            previousSalary,
-            Math.Round(changePercentage, 2),
-            request.Data.EffectiveDate,
-            request.Data.ChangeReason ?? string.Empty
-        ), cancellationToken);
+            await _historyRepository.AddAsync(history, ct);
 
-        return history.ToDto();
+            await _publishEndpoint.Publish(new SalaryChangedEvent(
+                request.EmployeeId,
+                newRecord.Id,
+                request.Data.NewBaseSalary,
+                previousSalary,
+                Math.Round(changePercentage, 2),
+                request.Data.EffectiveDate,
+                request.Data.ChangeReason ?? string.Empty
+            ), ct);
+
+            return history.ToDto();
+        }, cancellationToken);
     }
 }

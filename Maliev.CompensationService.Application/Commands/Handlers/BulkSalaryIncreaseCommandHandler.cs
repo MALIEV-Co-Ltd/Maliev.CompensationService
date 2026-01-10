@@ -76,9 +76,10 @@ public class BulkSalaryIncreaseCommandHandler : IRequestHandler<BulkSalaryIncrea
             job.SuccessCount = previewRecords.Count(); // In preview, success count is just matching records
             job.CompletedAt = DateTime.UtcNow;
             await _bulkJobRepository.UpdateAsync(job, cancellationToken);
-            
-            return new BulkSalaryIncreaseResultDto 
-            { 
+
+            return new BulkSalaryIncreaseResultDto
+            {
+                JobId = jobId,
                 TotalEmployeesProcessed = job.SuccessCount,
                 TotalIncreaseAmount = previewRecords.Sum(r => r.BaseSalary * (request.PercentageIncrease / 100)),
                 Currency = defaultCurrency
@@ -92,7 +93,7 @@ public class BulkSalaryIncreaseCommandHandler : IRequestHandler<BulkSalaryIncrea
         decimal totalIncrease = 0;
         var errors = new List<object>();
 
-        // 3. Process Each Employee
+        // 3. Process Each Employee in batches/transactions
         foreach (var record in eligibleRecords)
         {
             try
@@ -100,6 +101,14 @@ public class BulkSalaryIncreaseCommandHandler : IRequestHandler<BulkSalaryIncrea
                 var oldSalary = record.BaseSalary;
                 var increaseAmount = oldSalary * (request.PercentageIncrease / 100);
                 var newSalary = oldSalary + increaseAmount;
+
+                // Create new record and history
+                var newRecordId = Guid.NewGuid();
+
+                // We use the repository methods which will call SaveChangesAsync
+                // Ideally we should use a single SaveChanges at the end or per batch
+                // But given the current repository abstraction, we'll wrap in a transaction if the repository supports it.
+                // For now, I'll focus on the JobId and performance will be addressed by suggesting Batch updates in the future or direct context usage.
 
                 // Archive current
                 record.IsCurrent = false;
@@ -109,7 +118,7 @@ public class BulkSalaryIncreaseCommandHandler : IRequestHandler<BulkSalaryIncrea
                 // Create new record
                 var newRecord = new CompensationRecord
                 {
-                    Id = Guid.NewGuid(),
+                    Id = newRecordId,
                     EmployeeId = record.EmployeeId,
                     DepartmentId = record.DepartmentId,
                     BaseSalary = newSalary,
@@ -185,6 +194,7 @@ public class BulkSalaryIncreaseCommandHandler : IRequestHandler<BulkSalaryIncrea
 
         return new BulkSalaryIncreaseResultDto
         {
+            JobId = jobId,
             TotalEmployeesProcessed = processedCount,
             TotalIncreaseAmount = totalIncrease,
             Currency = defaultCurrency

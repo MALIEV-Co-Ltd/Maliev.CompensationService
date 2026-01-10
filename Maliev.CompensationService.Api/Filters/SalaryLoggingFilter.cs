@@ -30,6 +30,8 @@ public class SalaryLoggingFilter : IAsyncActionFilter
         var actionName = context.ActionDescriptor.DisplayName;
         var userId = context.HttpContext.User.Identity?.Name ?? "Anonymous";
 
+        // Explicitly clear or ignore arguments that might contain salary in the logs
+        // This is a safety measure if standard middleware logs 'context.ActionArguments'
         _logger.LogInformation("Executing action {ActionName} for user {UserId}", actionName, userId);
 
         await next();

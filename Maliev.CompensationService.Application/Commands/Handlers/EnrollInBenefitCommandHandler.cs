@@ -33,22 +33,32 @@ public class EnrollInBenefitCommandHandler : IRequestHandler<EnrollInBenefitComm
     {
         // Check for existing active enrollment for this benefit
         var existing = await _repository.GetEnrollmentsByEmployeeIdAsync(request.EmployeeId, cancellationToken);
-        if (existing.Any(e => e.BenefitId == request.Data.BenefitId && e.Status == EnrollmentStatus.Active))
+        if (existing.Any(e => e.BenefitId == request.Data.BenefitId && (e.Status == EnrollmentStatus.Active || e.Status == EnrollmentStatus.Pending)))
         {
-            throw new InvalidOperationException("Employee is already active in this benefit program.");
+            throw new InvalidOperationException("Employee is already active or pending in this benefit program.");
         }
 
-        // We assume the benefit existence is validated by foreign key or a separate check if needed
-        // For simplicity we'll just create the enrollment
+        // Fetch benefit to check for waiting period
+        var activeBenefits = await _repository.GetAllActiveAsync(cancellationToken);
+        var benefit = activeBenefits.FirstOrDefault(b => b.Id == request.Data.BenefitId)
+            ?? throw new InvalidOperationException("Benefit program not found or inactive.");
 
         var enrollmentId = Guid.NewGuid();
+        var status = benefit.WaitingPeriodDays > 0 ? EnrollmentStatus.Pending : EnrollmentStatus.Active;
+        var effectiveDate = request.Data.EnrollmentDate;
+
+        if (benefit.WaitingPeriodDays > 0)
+        {
+            effectiveDate = effectiveDate.AddDays(benefit.WaitingPeriodDays);
+        }
+
         var enrollment = new BenefitsEnrollment
         {
             Id = enrollmentId,
             EmployeeId = request.EmployeeId,
             BenefitId = request.Data.BenefitId,
-            EnrollmentDate = request.Data.EnrollmentDate,
-            Status = EnrollmentStatus.Active, // For now we set to active directly, or Pending if we implement waiting period logic fully
+            EnrollmentDate = effectiveDate,
+            Status = status,
             EmployeeContribution = request.Data.EmployeeContribution,
             CoverageLevel = request.Data.CoverageLevel,
             CreatedDate = DateTime.UtcNow,
