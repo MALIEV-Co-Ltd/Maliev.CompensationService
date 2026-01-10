@@ -14,7 +14,10 @@ public class GetAvailableBenefitsQueryHandler : IRequestHandler<GetAvailableBene
 {
     private readonly IBenefitsRepository _repository;
     private readonly IDistributedCache _cache;
-    private const string CacheKey = "available_benefits";
+    /// <summary>
+    /// Cache key for available benefits
+    /// </summary>
+    public const string AvailableBenefitsCacheKey = "available_benefits";
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GetAvailableBenefitsQueryHandler"/> class
@@ -30,7 +33,7 @@ public class GetAvailableBenefitsQueryHandler : IRequestHandler<GetAvailableBene
     /// <inheritdoc />
     public async Task<IEnumerable<BenefitDto>> Handle(GetAvailableBenefitsQuery request, CancellationToken cancellationToken)
     {
-        var cachedData = await _cache.GetStringAsync(CacheKey, cancellationToken);
+        var cachedData = await _cache.GetStringAsync(AvailableBenefitsCacheKey, cancellationToken);
         if (!string.IsNullOrEmpty(cachedData))
         {
             return JsonSerializer.Deserialize<IEnumerable<BenefitDto>>(cachedData) ?? Enumerable.Empty<BenefitDto>();
@@ -44,7 +47,7 @@ public class GetAvailableBenefitsQueryHandler : IRequestHandler<GetAvailableBene
             AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24)
         };
 
-        await _cache.SetStringAsync(CacheKey, JsonSerializer.Serialize(dtos), options, cancellationToken);
+        await _cache.SetStringAsync(AvailableBenefitsCacheKey, JsonSerializer.Serialize(dtos), options, cancellationToken);
 
         return dtos;
     }

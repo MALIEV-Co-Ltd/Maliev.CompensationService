@@ -3,6 +3,7 @@ using System;
 using Maliev.CompensationService.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Maliev.CompensationService.Infrastructure.Migrations
 {
     [DbContext(typeof(CompensationDbContext))]
-    partial class CompensationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260110141552_UpdateEncryptedFields")]
+    partial class UpdateEncryptedFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

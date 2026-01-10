@@ -30,12 +30,15 @@ public class EnrollInBenefitCommandHandlerTests
         // Arrange
         var employeeId = Guid.NewGuid();
         var benefitId = Guid.NewGuid();
-        
+
         _repositoryMock.Setup(r => r.GetEnrollmentsByEmployeeIdAsync(employeeId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<BenefitsEnrollment>());
 
         _repositoryMock.Setup(r => r.GetEnrollmentByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new BenefitsEnrollment { Id = Guid.NewGuid(), EmployeeId = employeeId, BenefitId = benefitId });
+
+        _repositoryMock.Setup(r => r.GetAllActiveAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<Benefit> { new Benefit { Id = benefitId, Name = "Test Benefit", WaitingPeriodDays = 0 } });
 
         var dto = new EnrollInBenefitDto
         {
@@ -63,11 +66,11 @@ public class EnrollInBenefitCommandHandlerTests
         // Arrange
         var employeeId = Guid.NewGuid();
         var benefitId = Guid.NewGuid();
-        
+
         _repositoryMock.Setup(r => r.GetEnrollmentsByEmployeeIdAsync(employeeId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<BenefitsEnrollment> 
-            { 
-                new BenefitsEnrollment { BenefitId = benefitId, Status = EnrollmentStatus.Active } 
+            .ReturnsAsync(new List<BenefitsEnrollment>
+            {
+                new BenefitsEnrollment { BenefitId = benefitId, Status = EnrollmentStatus.Active }
             });
 
         var dto = new EnrollInBenefitDto { BenefitId = benefitId };

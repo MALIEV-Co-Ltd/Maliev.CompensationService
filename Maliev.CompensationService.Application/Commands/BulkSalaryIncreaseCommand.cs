@@ -46,6 +46,11 @@ public class BulkSalaryIncreaseCommand : IRequest<BulkSalaryIncreaseResultDto>
 public class BulkSalaryIncreaseResultDto
 {
     /// <summary>
+    /// Gets or sets the unique identifier of the job created.
+    /// </summary>
+    public Guid JobId { get; set; }
+
+    /// <summary>
     /// Gets or sets the total number of employees processed in the bulk operation.
     /// </summary>
     public int TotalEmployeesProcessed { get; set; }

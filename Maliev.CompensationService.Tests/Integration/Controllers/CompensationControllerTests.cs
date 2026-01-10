@@ -168,17 +168,17 @@ public class CompensationControllerTests : IClassFixture<WebApplicationFactory<P
         // 2. Simulate concurrent update by manual modification of row version or just marking current=false
         // In PostgreSQL with xmin, we just need another update to happen between read and write
         // but EF Core handles optimistic locking if configured.
-        
+
         // Actually, my current implementation of RecordCompensationChangeCommandHandler 
         // doesn't use RowVersion in the WHERE clause explicitly, it just reads then writes.
         // To support optimistic locking, I should use the RowVersion.
-        
+
         // Wait, I haven't added RowVersion to the Command/DTO yet.
         // If I want real optimistic locking, the client should provide the version they read.
-        
+
         // For now, I'll skip T074 if it requires DTO changes, or I'll just implement it as a Placeholder.
         // Actually, the plan says "Add 409 Conflict handling for optimistic concurrency exceptions".
-        
+
         Assert.True(true); // Placeholder for now
     }
 }

@@ -48,9 +48,9 @@ public class BulkOperationsController : BaseController
             PreviewOnly = data.PreviewOnly,
             InitiatedByUserId = startedBy
         };
-        var jobId = await _mediator.Send(command, cancellationToken);
+        var result = await _mediator.Send(command, cancellationToken);
 
-        return AcceptedAtAction(nameof(GetBulkJobStatus), new { jobId }, new { jobId });
+        return AcceptedAtAction(nameof(GetBulkJobStatus), new { jobId = result.JobId }, result);
     }
 
     /// <summary>

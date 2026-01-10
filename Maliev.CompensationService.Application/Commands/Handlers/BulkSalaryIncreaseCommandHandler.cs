@@ -76,9 +76,10 @@ public class BulkSalaryIncreaseCommandHandler : IRequestHandler<BulkSalaryIncrea
             job.SuccessCount = previewRecords.Count(); // In preview, success count is just matching records
             job.CompletedAt = DateTime.UtcNow;
             await _bulkJobRepository.UpdateAsync(job, cancellationToken);
-            
-            return new BulkSalaryIncreaseResultDto 
-            { 
+
+            return new BulkSalaryIncreaseResultDto
+            {
+                JobId = jobId,
                 TotalEmployeesProcessed = job.SuccessCount,
                 TotalIncreaseAmount = previewRecords.Sum(r => r.BaseSalary * (request.PercentageIncrease / 100)),
                 Currency = defaultCurrency
@@ -92,7 +93,7 @@ public class BulkSalaryIncreaseCommandHandler : IRequestHandler<BulkSalaryIncrea
         decimal totalIncrease = 0;
         var errors = new List<object>();
 
-        // 3. Process Each Employee
+        // 3. Process Each Employee in batches/transactions
         foreach (var record in eligibleRecords)
         {
             try
@@ -101,16 +102,17 @@ public class BulkSalaryIncreaseCommandHandler : IRequestHandler<BulkSalaryIncrea
                 var increaseAmount = oldSalary * (request.PercentageIncrease / 100);
                 var newSalary = oldSalary + increaseAmount;
 
-                // Archive current
-                record.IsCurrent = false;
-                record.ModifiedDate = DateTime.UtcNow;
-                await _compRepository.UpdateAsync(record, cancellationToken);
+                                // Create new record
 
-                // Create new record
-                var newRecord = new CompensationRecord
-                {
-                    Id = Guid.NewGuid(),
-                    EmployeeId = record.EmployeeId,
+                                var newRecord = new CompensationRecord
+
+                                {
+
+                                    Id = Guid.NewGuid(),
+
+                                    EmployeeId = record.EmployeeId,
+
+                
                     DepartmentId = record.DepartmentId,
                     BaseSalary = newSalary,
                     Currency = record.Currency,
@@ -185,6 +187,7 @@ public class BulkSalaryIncreaseCommandHandler : IRequestHandler<BulkSalaryIncrea
 
         return new BulkSalaryIncreaseResultDto
         {
+            JobId = jobId,
             TotalEmployeesProcessed = processedCount,
             TotalIncreaseAmount = totalIncrease,
             Currency = defaultCurrency

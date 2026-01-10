@@ -46,6 +46,9 @@ public class RecordCompensationChangeCommandHandlerTests
         _compRepoMock.Setup(r => r.GetByEmployeeIdAsync(employeeId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(currentRecord);
 
+        _compRepoMock.Setup(r => r.ExecuteInTransactionAsync(It.IsAny<Func<CancellationToken, Task<SalaryHistoryDto>>>(), It.IsAny<CancellationToken>()))
+            .Returns<Func<CancellationToken, Task<SalaryHistoryDto>>, CancellationToken>((action, ct) => action(ct));
+
         var dto = new RecordCompensationChangeDto
         {
             NewBaseSalary = 55000,

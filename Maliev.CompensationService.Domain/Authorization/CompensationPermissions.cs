@@ -1,27 +1,31 @@
 namespace Maliev.CompensationService.Domain.Authorization;
 
 /// <summary>
-/// Defines permission constants for compensation service operations
+/// Constants for Compensation Service permissions.
+/// Follows GCP-style naming: {service}.{resource}.{action}
 /// </summary>
 public static class CompensationPermissions
 {
-    /// <summary>
-    /// Permission to read compensation data
-    /// </summary>
-    public const string Read = "compensation.records.read";
+    /// <summary>Permission to read compensation data.</summary>
+    public const string Read = "compensation.compensations.read";
 
-    /// <summary>
-    /// Permission to update compensation records
-    /// </summary>
-    public const string Update = "compensation.records.update";
+    /// <summary>Permission to update compensation data.</summary>
+    public const string Update = "compensation.compensations.update";
 
-    /// <summary>
-    /// Permission to perform administrative operations (bulk operations, etc.)
-    /// </summary>
+    /// <summary>Permission for administrative operations.</summary>
     public const string Admin = "compensation.admin.manage";
 
-    /// <summary>
-    /// Permission to generate and view compensation reports
-    /// </summary>
+    /// <summary>Permission to view reports.</summary>
     public const string Reports = "compensation.reports.view";
+
+    /// <summary>
+    /// Collection of all permissions for easy registration.
+    /// </summary>
+    public static readonly IReadOnlyDictionary<string, string> All = new Dictionary<string, string>
+    {
+        { Read, "Read employee compensation and history" },
+        { Update, "Update employee compensation and benefits" },
+        { Admin, "Perform administrative bulk operations" },
+        { Reports, "Generate compensation and budget reports" }
+    };
 }

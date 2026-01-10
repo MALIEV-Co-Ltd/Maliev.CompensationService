@@ -1,4 +1,5 @@
 using Maliev.CompensationService.Domain.Entities;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Maliev.CompensationService.Application.Interfaces;
 
@@ -44,4 +45,20 @@ public interface ICompensationRepository
     /// <param name="record">The record to update</param>
     /// <param name="cancellationToken">Cancellation token</param>
     Task UpdateAsync(CompensationRecord record, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Starts a new database transaction
+    /// </summary>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>A task that represents the asynchronous transaction operation</returns>
+    Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Executes an action within a transaction using the configured execution strategy.
+    /// </summary>
+    /// <typeparam name="T">The type of the return value of the action.</typeparam>
+    /// <param name="action">The action to execute.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A task that represents the asynchronous execution operation.</returns>
+    Task<T> ExecuteInTransactionAsync<T>(Func<CancellationToken, Task<T>> action, CancellationToken cancellationToken = default);
 }

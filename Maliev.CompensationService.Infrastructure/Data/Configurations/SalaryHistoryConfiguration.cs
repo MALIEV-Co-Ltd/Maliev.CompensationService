@@ -30,10 +30,12 @@ public class SalaryHistoryConfiguration : IEntityTypeConfiguration<SalaryHistory
 
         builder.Property(e => e.PreviousSalary)
             .HasColumnName("previous_salary")
+            .HasColumnType("character varying")
             .IsRequired();
 
         builder.Property(e => e.NewSalary)
             .HasColumnName("new_salary")
+            .HasColumnType("character varying")
             .IsRequired();
 
         builder.Property(e => e.ChangeAmount)

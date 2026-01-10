@@ -29,7 +29,7 @@ public class GetAvailableBenefitsQueryHandlerTests
         // Arrange
         var dtos = new List<BenefitDto> { new BenefitDto { Name = "Cached Benefit" } };
         var cachedData = JsonSerializer.Serialize(dtos);
-        
+
         _cacheMock.Setup(c => c.GetAsync("available_benefits", It.IsAny<CancellationToken>()))
             .ReturnsAsync(System.Text.Encoding.UTF8.GetBytes(cachedData));
 
@@ -64,9 +64,9 @@ public class GetAvailableBenefitsQueryHandlerTests
         Assert.Single(result);
         Assert.Equal("Repo Benefit", result.First().Name);
         _cacheMock.Verify(c => c.SetAsync(
-            "available_benefits", 
-            It.IsAny<byte[]>(), 
-            It.IsAny<DistributedCacheEntryOptions>(), 
+            "available_benefits",
+            It.IsAny<byte[]>(),
+            It.IsAny<DistributedCacheEntryOptions>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }
 }
