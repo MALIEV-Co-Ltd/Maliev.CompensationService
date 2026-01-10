@@ -25,8 +25,13 @@ public class DecimalEncryptionValueConverter : ValueConverter<decimal, string?>
     public DecimalEncryptionValueConverter(IEncryptionService encryptionService, ConverterMappingHints? mappingHints = null)
         : base(
             v => encryptionService.Encrypt(v.ToString()),
-            v => decimal.Parse(encryptionService.Decrypt(v) ?? "0"),
+            v => ParseDecimal(encryptionService.Decrypt(v)),
             mappingHints)
     {
+    }
+
+    private static decimal ParseDecimal(string? value)
+    {
+        return decimal.TryParse(value, out var result) ? result : 0;
     }
 }

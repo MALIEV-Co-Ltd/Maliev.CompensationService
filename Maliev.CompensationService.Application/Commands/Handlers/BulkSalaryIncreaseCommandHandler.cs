@@ -102,24 +102,17 @@ public class BulkSalaryIncreaseCommandHandler : IRequestHandler<BulkSalaryIncrea
                 var increaseAmount = oldSalary * (request.PercentageIncrease / 100);
                 var newSalary = oldSalary + increaseAmount;
 
-                // Create new record and history
-                var newRecordId = Guid.NewGuid();
+                                // Create new record
 
-                // We use the repository methods which will call SaveChangesAsync
-                // Ideally we should use a single SaveChanges at the end or per batch
-                // But given the current repository abstraction, we'll wrap in a transaction if the repository supports it.
-                // For now, I'll focus on the JobId and performance will be addressed by suggesting Batch updates in the future or direct context usage.
+                                var newRecord = new CompensationRecord
 
-                // Archive current
-                record.IsCurrent = false;
-                record.ModifiedDate = DateTime.UtcNow;
-                await _compRepository.UpdateAsync(record, cancellationToken);
+                                {
 
-                // Create new record
-                var newRecord = new CompensationRecord
-                {
-                    Id = newRecordId,
-                    EmployeeId = record.EmployeeId,
+                                    Id = Guid.NewGuid(),
+
+                                    EmployeeId = record.EmployeeId,
+
+                
                     DepartmentId = record.DepartmentId,
                     BaseSalary = newSalary,
                     Currency = record.Currency,

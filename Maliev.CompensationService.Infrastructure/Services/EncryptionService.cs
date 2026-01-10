@@ -11,6 +11,8 @@ namespace Maliev.CompensationService.Infrastructure.Services;
 public class EncryptionService : IEncryptionService
 {
     private readonly byte[] _key;
+    private const int NonceSize = 12; // 96 bits
+    private const int TagSize = 16;   // 128 bits
 
     public EncryptionService(IConfiguration configuration)
     {
@@ -27,24 +29,22 @@ public class EncryptionService : IEncryptionService
     {
         if (string.IsNullOrEmpty(plainText)) return string.Empty;
 
-        using var aes = Aes.Create();
-        aes.Key = _key;
-        aes.GenerateIV();
-        var iv = aes.IV;
+        var nonce = new byte[NonceSize];
+        RandomNumberGenerator.Fill(nonce);
 
-        using var encryptor = aes.CreateEncryptor(aes.Key, iv);
-        using var ms = new MemoryStream();
+        var plainBytes = Encoding.UTF8.GetBytes(plainText);
+        var cipherText = new byte[plainBytes.Length];
+        var tag = new byte[TagSize];
 
-        // Write IV first
-        ms.Write(iv, 0, iv.Length);
+        using var aesGcm = new AesGcm(_key, TagSize);
+        aesGcm.Encrypt(nonce, plainBytes, cipherText, tag);
 
-        using (var cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write))
-        using (var sw = new StreamWriter(cs))
-        {
-            sw.Write(plainText);
-        }
+        var result = new byte[NonceSize + cipherText.Length + TagSize];
+        Buffer.BlockCopy(nonce, 0, result, 0, NonceSize);
+        Buffer.BlockCopy(cipherText, 0, result, NonceSize, cipherText.Length);
+        Buffer.BlockCopy(tag, 0, result, NonceSize + cipherText.Length, TagSize);
 
-        return Convert.ToBase64String(ms.ToArray());
+        return Convert.ToBase64String(result);
     }
 
     public string Decrypt(string? cipherText)
@@ -52,20 +52,25 @@ public class EncryptionService : IEncryptionService
         if (string.IsNullOrEmpty(cipherText)) return string.Empty;
 
         var fullCipher = Convert.FromBase64String(cipherText);
-        using var aes = Aes.Create();
-        aes.Key = _key;
+        
+        if (fullCipher.Length < NonceSize + TagSize)
+        {
+            return string.Empty;
+        }
 
-        var iv = new byte[aes.BlockSize / 8];
-        var cipher = new byte[fullCipher.Length - iv.Length];
+        var nonce = new byte[NonceSize];
+        var tag = new byte[TagSize];
+        var cipherBytes = new byte[fullCipher.Length - NonceSize - TagSize];
 
-        Buffer.BlockCopy(fullCipher, 0, iv, 0, iv.Length);
-        Buffer.BlockCopy(fullCipher, iv.Length, cipher, 0, cipher.Length);
+        Buffer.BlockCopy(fullCipher, 0, nonce, 0, NonceSize);
+        Buffer.BlockCopy(fullCipher, NonceSize, cipherBytes, 0, cipherBytes.Length);
+        Buffer.BlockCopy(fullCipher, NonceSize + cipherBytes.Length, tag, 0, TagSize);
 
-        using var decryptor = aes.CreateDecryptor(aes.Key, iv);
-        using var ms = new MemoryStream(cipher);
-        using var cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Read);
-        using var sr = new StreamReader(cs);
+        var plainBytes = new byte[cipherBytes.Length];
 
-        return sr.ReadToEnd();
+        using var aesGcm = new AesGcm(_key, TagSize);
+        aesGcm.Decrypt(nonce, cipherBytes, tag, plainBytes);
+
+        return Encoding.UTF8.GetString(plainBytes);
     }
 }
