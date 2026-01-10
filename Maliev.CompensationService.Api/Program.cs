@@ -60,14 +60,15 @@ builder.Services.AddControllers(options =>
     options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.SnakeCaseLower;
 });
 
-// IAM Service Client - Configure with service account authentication
-builder.Services.AddIAMClient(builder.Configuration, "Compensation");
-builder.Services.AddIAMRegistration<CompensationIAMRegistrationService>();
+// IAM Registration
+builder.AddIAMServiceClient("compensation");
+builder.Services.AddIAMRegistration<CompensationIAMRegistrationService>("compensation");
 
 builder.Services.AddScoped<ICompensationRepository, CompensationRepository>();
 builder.Services.AddScoped<IBenefitsRepository, BenefitsRepository>();
 builder.Services.AddScoped<ISalaryHistoryRepository, SalaryHistoryRepository>();
 builder.Services.AddScoped<IBulkJobRepository, BulkJobRepository>();
+builder.Services.AddScoped<IEncryptionService, EncryptionService>();
 builder.Services.AddScoped<Maliev.CompensationService.Application.Commands.Handlers.UndoArchiveCompensationCommandHandler>();
 
 // Register Mediator
@@ -77,13 +78,13 @@ builder.Services.AddScoped<Maliev.CompensationService.Application.Common.Mediato
 var assembly = typeof(GetCompensationDetailsQueryHandler).Assembly;
 var handlerTypes = assembly.GetTypes()
     .Where(t => !t.IsAbstract && !t.IsInterface)
-    .Where(t => t.GetInterfaces().Any(i => i.IsGenericType && 
+    .Where(t => t.GetInterfaces().Any(i => i.IsGenericType &&
         (i.GetGenericTypeDefinition() == typeof(Maliev.CompensationService.Application.Common.Mediator.IRequestHandler<,>) ||
          i.GetGenericTypeDefinition() == typeof(Maliev.CompensationService.Application.Common.Mediator.IRequestHandler<>))));
 
 foreach (var handlerType in handlerTypes)
 {
-    foreach (var interfaceType in handlerType.GetInterfaces().Where(i => i.IsGenericType && 
+    foreach (var interfaceType in handlerType.GetInterfaces().Where(i => i.IsGenericType &&
         (i.GetGenericTypeDefinition() == typeof(Maliev.CompensationService.Application.Common.Mediator.IRequestHandler<,>) ||
          i.GetGenericTypeDefinition() == typeof(Maliev.CompensationService.Application.Common.Mediator.IRequestHandler<>))))
     {
