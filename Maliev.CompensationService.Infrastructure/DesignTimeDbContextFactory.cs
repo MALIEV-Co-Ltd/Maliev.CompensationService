@@ -1,4 +1,3 @@
-using Maliev.CompensationService.Application.Interfaces;
 using Maliev.CompensationService.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
@@ -20,12 +19,6 @@ public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<Compensati
         var optionsBuilder = new DbContextOptionsBuilder<CompensationDbContext>();
         optionsBuilder.UseNpgsql(connectionString);
 
-        return new CompensationDbContext(optionsBuilder.Options, new DesignTimeEncryptionService());
-    }
-
-    private class DesignTimeEncryptionService : IEncryptionService
-    {
-        public string Encrypt(string? plainText) => plainText ?? string.Empty;
-        public string Decrypt(string? cipherText) => cipherText ?? string.Empty;
+        return new CompensationDbContext(optionsBuilder.Options);
     }
 }

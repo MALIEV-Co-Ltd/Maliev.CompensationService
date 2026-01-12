@@ -8,6 +8,7 @@ using Maliev.CompensationService.Infrastructure.Data;
 using MassTransit;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
@@ -17,18 +18,6 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Xunit;
 
 namespace Maliev.CompensationService.Tests.Integration.Controllers;
-
-public class AllowAnonymousHandler : IAuthorizationHandler
-{
-    public Task HandleAsync(AuthorizationHandlerContext context)
-    {
-        foreach (var requirement in context.PendingRequirements.ToList())
-        {
-            context.Succeed(requirement);
-        }
-        return Task.CompletedTask;
-    }
-}
 
 [Collection("Testcontainers")]
 public class CompensationControllerTests : IClassFixture<WebApplicationFactory<Program>>
@@ -47,7 +36,6 @@ public class CompensationControllerTests : IClassFixture<WebApplicationFactory<P
             Environment.SetEnvironmentVariable("ConnectionStrings__CompensationDbContext", _fixture.PostgreSqlContainer.GetConnectionString());
             Environment.SetEnvironmentVariable("ConnectionStrings__redis", _fixture.RedisContainer.GetConnectionString());
             Environment.SetEnvironmentVariable("ConnectionStrings__rabbitmq", _fixture.RabbitMqContainer.GetConnectionString());
-            Environment.SetEnvironmentVariable("Encryption__Key", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXY=");
 
             builder.ConfigureTestServices(services =>
             {
@@ -63,7 +51,7 @@ public class CompensationControllerTests : IClassFixture<WebApplicationFactory<P
 
                 // Mock authorization
                 services.RemoveAll<IAuthorizationHandler>();
-                services.AddSingleton<IAuthorizationHandler, AllowAnonymousHandler>();
+                services.AddSingleton<IAuthorizationHandler, TestAuthHandler>();
             });
         });
     }

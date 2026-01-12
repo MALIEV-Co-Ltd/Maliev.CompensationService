@@ -23,4 +23,14 @@ public abstract class BaseController : ControllerBase
         }
         return Guid.Empty;
     }
+
+    /// <summary>
+    /// Checks if the current user has the specified permission
+    /// </summary>
+    /// <param name="permission">The permission string to check</param>
+    /// <returns>True if the user has the permission, otherwise false</returns>
+    protected bool HasPermission(string permission)
+    {
+        return User.Claims.Any(c => c.Type == "permission" && c.Value == permission);
+    }
 }
