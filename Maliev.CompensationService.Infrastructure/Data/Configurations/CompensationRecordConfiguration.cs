@@ -34,7 +34,6 @@ public class CompensationRecordConfiguration : IEntityTypeConfiguration<Compensa
 
         builder.Property(e => e.BaseSalary)
             .HasColumnName("base_salary")
-            .HasColumnType("character varying")
             .IsRequired();
 
         builder.Property(e => e.Currency)
