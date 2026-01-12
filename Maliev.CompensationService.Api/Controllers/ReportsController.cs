@@ -12,7 +12,7 @@ namespace Maliev.CompensationService.Api.Controllers;
 /// </summary>
 [ApiController]
 [Route("compensation/v1/reports")]
-public class ReportsController : ControllerBase
+public class ReportsController : BaseController
 {
     private readonly IMediator _mediator;
 
@@ -39,6 +39,15 @@ public class ReportsController : ControllerBase
     {
         var query = new GetCompensationAnalysisQuery(departmentId);
         var result = await _mediator.Send(query, cancellationToken);
+
+        if (!HasPermission(CompensationPermissions.ReadSensitive))
+        {
+            result.TotalAnnualBudget = 0;
+            result.AverageSalary = 0;
+            result.MinimumSalary = 0;
+            result.MaximumSalary = 0;
+        }
+
         return Ok(result);
     }
 
@@ -53,6 +62,15 @@ public class ReportsController : ControllerBase
     {
         var query = new GetCompensationAnalysisQuery();
         var result = await _mediator.Send(query, cancellationToken);
+
+        if (!HasPermission(CompensationPermissions.ReadSensitive))
+        {
+            result.TotalAnnualBudget = 0;
+            result.AverageSalary = 0;
+            result.MinimumSalary = 0;
+            result.MaximumSalary = 0;
+        }
+
         return Ok(result);
     }
 }

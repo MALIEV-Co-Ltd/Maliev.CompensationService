@@ -44,8 +44,7 @@ public class DependentConfiguration : IEntityTypeConfiguration<Dependent>
             .IsRequired();
 
         builder.Property(e => e.NationalId)
-            .HasColumnName("national_id")
-            .HasColumnType("character varying");
+            .HasColumnName("national_id");
 
         builder.Property(e => e.CreatedDate)
             .HasColumnName("created_date")

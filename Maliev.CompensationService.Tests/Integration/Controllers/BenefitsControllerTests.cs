@@ -35,7 +35,6 @@ public class BenefitsControllerTests : IClassFixture<WebApplicationFactory<Progr
             Environment.SetEnvironmentVariable("ConnectionStrings__CompensationDbContext", _fixture.PostgreSqlContainer.GetConnectionString());
             Environment.SetEnvironmentVariable("ConnectionStrings__redis", _fixture.RedisContainer.GetConnectionString());
             Environment.SetEnvironmentVariable("ConnectionStrings__rabbitmq", _fixture.RabbitMqContainer.GetConnectionString());
-            Environment.SetEnvironmentVariable("Encryption__Key", "MDEyMzQ1Njc4OWFiY2RlZmdoaWprbG1ub3BxcnN0dXY=");
 
             builder.ConfigureTestServices(services =>
             {
@@ -50,7 +49,7 @@ public class BenefitsControllerTests : IClassFixture<WebApplicationFactory<Progr
                 services.AddMassTransitTestHarness();
 
                 services.RemoveAll<IAuthorizationHandler>();
-                services.AddSingleton<IAuthorizationHandler, AllowAnonymousHandler>();
+                services.AddSingleton<IAuthorizationHandler, TestAuthHandler>();
             });
         });
     }

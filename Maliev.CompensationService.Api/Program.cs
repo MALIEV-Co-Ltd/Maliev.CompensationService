@@ -68,7 +68,6 @@ builder.Services.AddScoped<ICompensationRepository, CompensationRepository>();
 builder.Services.AddScoped<IBenefitsRepository, BenefitsRepository>();
 builder.Services.AddScoped<ISalaryHistoryRepository, SalaryHistoryRepository>();
 builder.Services.AddScoped<IBulkJobRepository, BulkJobRepository>();
-builder.Services.AddScoped<IEncryptionService, EncryptionService>();
 builder.Services.AddScoped<Maliev.CompensationService.Application.Commands.Handlers.UndoArchiveCompensationCommandHandler>();
 
 // Register Mediator

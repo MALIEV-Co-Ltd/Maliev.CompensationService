@@ -228,9 +228,8 @@ namespace Maliev.CompensationService.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("approved_by");
 
-                    b.Property<string>("BaseSalary")
-                        .IsRequired()
-                        .HasColumnType("character varying")
+                    b.Property<decimal>("BaseSalary")
+                        .HasColumnType("numeric")
                         .HasColumnName("base_salary");
 
                     b.Property<decimal?>("BonusPercentage")
@@ -340,7 +339,7 @@ namespace Maliev.CompensationService.Infrastructure.Migrations
 
                     b.Property<string>("NationalId")
                         .HasMaxLength(500)
-                        .HasColumnType("character varying")
+                        .HasColumnType("character varying(500)")
                         .HasColumnName("national_id");
 
                     b.Property<int>("Relationship")
@@ -402,14 +401,12 @@ namespace Maliev.CompensationService.Infrastructure.Migrations
                         .HasDefaultValue(false)
                         .HasColumnName("is_high_increase");
 
-                    b.Property<string>("NewSalary")
-                        .IsRequired()
-                        .HasColumnType("character varying")
+                    b.Property<decimal>("NewSalary")
+                        .HasColumnType("numeric")
                         .HasColumnName("new_salary");
 
-                    b.Property<string>("PreviousSalary")
-                        .IsRequired()
-                        .HasColumnType("character varying")
+                    b.Property<decimal>("PreviousSalary")
+                        .HasColumnType("numeric")
                         .HasColumnName("previous_salary");
 
                     b.HasKey("Id");

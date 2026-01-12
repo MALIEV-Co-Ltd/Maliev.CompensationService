@@ -9,6 +9,9 @@ public static class CompensationPermissions
     /// <summary>Permission to read compensation data.</summary>
     public const string Read = "compensation.compensations.read";
 
+    /// <summary>Permission to read sensitive compensation data (salary, personal IDs).</summary>
+    public const string ReadSensitive = "compensation.compensations.read_sensitive";
+
     /// <summary>Permission to update compensation data.</summary>
     public const string Update = "compensation.compensations.update";
 
@@ -24,6 +27,7 @@ public static class CompensationPermissions
     public static readonly IReadOnlyDictionary<string, string> All = new Dictionary<string, string>
     {
         { Read, "Read employee compensation and history" },
+        { ReadSensitive, "Read sensitive salary and personal data" },
         { Update, "Update employee compensation and benefits" },
         { Admin, "Perform administrative bulk operations" },
         { Reports, "Generate compensation and budget reports" }

@@ -45,6 +45,11 @@ public class CompensationController : BaseController
             return NotFound();
         }
 
+        if (!HasPermission(CompensationPermissions.ReadSensitive))
+        {
+            result.BaseSalary = 0;
+        }
+
         return Ok(result);
     }
 
@@ -82,12 +87,20 @@ public class CompensationController : BaseController
     /// <param name="employeeId">Unique identifier of the employee.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A collection of historical salary records.</returns>
-    [HttpGet("{employeeId:guid}/compensation/history")]
     [RequirePermission(CompensationPermissions.Read)]
     public async Task<ActionResult<IEnumerable<SalaryHistoryDto>>> GetCompensationHistory(Guid employeeId, CancellationToken cancellationToken)
     {
         var query = new GetCompensationHistoryQuery(employeeId);
         var result = await _mediator.Send(query, cancellationToken);
+
+        if (!HasPermission(CompensationPermissions.ReadSensitive))
+        {
+            foreach (var history in result)
+            {
+                history.PreviousSalary = 0;
+                history.NewSalary = 0;
+            }
+        }
 
         return Ok(result);
     }
@@ -98,12 +111,26 @@ public class CompensationController : BaseController
     /// <param name="employeeId">Unique identifier of the employee.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A collection of benefit enrollments.</returns>
-    [HttpGet("{employeeId:guid}/benefits")]
     [RequirePermission(CompensationPermissions.Read)]
     public async Task<ActionResult<IEnumerable<BenefitsEnrollmentDto>>> GetBenefits(Guid employeeId, CancellationToken cancellationToken)
     {
         var query = new GetEmployeeBenefitsQuery(employeeId);
         var result = await _mediator.Send(query, cancellationToken);
+
+        if (!HasPermission(CompensationPermissions.ReadSensitive))
+        {
+            foreach (var enrollment in result)
+            {
+                foreach (var dependent in enrollment.Dependents)
+                {
+                    if (!string.IsNullOrEmpty(dependent.NationalId))
+                    {
+                        dependent.NationalId = "********";
+                    }
+                }
+            }
+        }
+
         return Ok(result);
     }
 
