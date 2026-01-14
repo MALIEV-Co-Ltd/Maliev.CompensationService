@@ -1,4 +1,3 @@
-#pragma warning disable CA1848 // For improved performance, use the LoggerMessage delegates
 using Maliev.Aspire.ServiceDefaults;
 using Maliev.CompensationService.Api.Filters;
 using Maliev.CompensationService.Application.Interfaces;
@@ -18,7 +17,7 @@ var bootstrapLogger = loggerFactory.CreateLogger("Program");
 
 try
 {
-    bootstrapLogger.LogInformation("Starting Compensation Service host");
+    Log.StartingHost(bootstrapLogger, "Compensation Service");
 
     var builder = WebApplication.CreateBuilder(args);
 
@@ -123,12 +122,12 @@ try
     app.MapDefaultEndpoints(servicePrefix: "compensation");
     app.MapApiDocumentation(servicePrefix: "compensation");
 
-    logger.LogInformation("Compensation Service started successfully");
+    Log.ServiceStarted(logger, "Compensation Service");
     await app.RunAsync();
 }
 catch (Exception ex)
 {
-    bootstrapLogger.LogCritical(ex, "Compensation Service host terminated unexpectedly during startup");
+    Log.HostTerminated(bootstrapLogger, ex, "Compensation Service");
     throw;
 }
 finally
@@ -139,4 +138,17 @@ finally
 /// <summary>
 /// Main program class for the Compensation Service.
 /// </summary>
-public partial class Program { }
+public partial class Program
+{
+    internal static partial class Log
+    {
+        [LoggerMessage(Level = LogLevel.Information, Message = "Starting {ServiceName} host")]
+        public static partial void StartingHost(ILogger logger, string serviceName);
+
+        [LoggerMessage(Level = LogLevel.Critical, Message = "{ServiceName} host terminated unexpectedly during startup")]
+        public static partial void HostTerminated(ILogger logger, Exception ex, string serviceName);
+
+        [LoggerMessage(Level = LogLevel.Information, Message = "{ServiceName} started successfully")]
+        public static partial void ServiceStarted(ILogger logger, string serviceName);
+    }
+}
