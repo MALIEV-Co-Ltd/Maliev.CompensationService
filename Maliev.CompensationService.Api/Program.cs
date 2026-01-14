@@ -17,7 +17,7 @@ var bootstrapLogger = loggerFactory.CreateLogger("Program");
 
 try
 {
-    Log.StartingHost(bootstrapLogger, "Compensation Service");
+    Program.Log.StartingHost(bootstrapLogger, "Compensation Service");
 
     var builder = WebApplication.CreateBuilder(args);
 
@@ -122,12 +122,12 @@ try
     app.MapDefaultEndpoints(servicePrefix: "compensation");
     app.MapApiDocumentation(servicePrefix: "compensation");
 
-    Log.ServiceStarted(logger, "Compensation Service");
+    Program.Log.ServiceStarted(logger, "Compensation Service");
     await app.RunAsync();
 }
 catch (Exception ex)
 {
-    Log.HostTerminated(bootstrapLogger, ex, "Compensation Service");
+    Program.Log.HostTerminated(bootstrapLogger, ex, "Compensation Service");
     throw;
 }
 finally
