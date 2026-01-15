@@ -102,17 +102,17 @@ public class BulkSalaryIncreaseCommandHandler : IRequestHandler<BulkSalaryIncrea
                 var increaseAmount = oldSalary * (request.PercentageIncrease / 100);
                 var newSalary = oldSalary + increaseAmount;
 
-                                // Create new record
+                // Create new record
 
-                                var newRecord = new CompensationRecord
+                var newRecord = new CompensationRecord
 
-                                {
+                {
 
-                                    Id = Guid.NewGuid(),
+                    Id = Guid.NewGuid(),
 
-                                    EmployeeId = record.EmployeeId,
+                    EmployeeId = record.EmployeeId,
 
-                
+
                     DepartmentId = record.DepartmentId,
                     BaseSalary = newSalary,
                     Currency = record.Currency,
