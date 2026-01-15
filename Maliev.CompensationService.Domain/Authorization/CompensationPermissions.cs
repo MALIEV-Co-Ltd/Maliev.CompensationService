@@ -7,13 +7,13 @@ namespace Maliev.CompensationService.Domain.Authorization;
 public static class CompensationPermissions
 {
     /// <summary>Permission to read compensation data.</summary>
-    public const string Read = "compensation.compensations.read";
+    public const string Read = "compensation.compensation.read";
 
     /// <summary>Permission to read sensitive compensation data (salary, personal IDs).</summary>
-    public const string ReadSensitive = "compensation.compensations.read_sensitive";
+    public const string ReadSensitive = "compensation.compensation.read-sensitive";
 
     /// <summary>Permission to update compensation data.</summary>
-    public const string Update = "compensation.compensations.update";
+    public const string Update = "compensation.compensation.update";
 
     /// <summary>Permission for administrative operations.</summary>
     public const string Admin = "compensation.admin.manage";
