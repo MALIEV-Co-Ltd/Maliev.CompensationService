@@ -53,6 +53,11 @@ public interface IBenefitsRepository
     Task TerminateActiveEnrollmentsAsync(Guid employeeId, DateTime terminationDate, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Adds a dependent to an existing enrollment
+    /// </summary>
+    Task AddDependentAsync(Dependent dependent, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Rejects all pending enrollments for an employee
     /// </summary>
     /// <param name="employeeId">Unique identifier of the employee</param>

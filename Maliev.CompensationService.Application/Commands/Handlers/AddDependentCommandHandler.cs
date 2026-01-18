@@ -31,16 +31,11 @@ public class AddDependentCommandHandler : IRequestHandler<AddDependentCommand, D
             throw new InvalidOperationException($"Enrollment with ID {request.EnrollmentId} not found");
         }
 
-        if (enrollment.Dependents == null)
-        {
-            enrollment.Dependents = new List<Dependent>();
-        }
-
         var dependent = request.Data.ToEntity(request.EnrollmentId);
 
-        enrollment.Dependents.Add(dependent);
-        await _benefitsRepository.UpdateEnrollmentAsync(enrollment, cancellationToken);
+        await _benefitsRepository.AddDependentAsync(dependent, cancellationToken);
 
         return dependent.ToDto();
     }
 }
+
