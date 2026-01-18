@@ -1,5 +1,5 @@
-using Maliev.MessagingContracts.Generated;
 using Maliev.CompensationService.Application.Interfaces;
+using Maliev.MessagingContracts.Generated;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 

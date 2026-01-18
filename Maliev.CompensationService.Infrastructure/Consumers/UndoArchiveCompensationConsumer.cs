@@ -1,5 +1,5 @@
-using Maliev.CompensationService.Application.Commands.Handlers;
 using Maliev.CompensationService.Application.Commands;
+using Maliev.CompensationService.Application.Commands.Handlers;
 using MassTransit;
 
 namespace Maliev.CompensationService.Infrastructure.Consumers;

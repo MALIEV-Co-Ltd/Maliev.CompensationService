@@ -1,8 +1,8 @@
 using Maliev.Aspire.ServiceDefaults.Authorization;
+using Maliev.CompensationService.Application.Common.Mediator;
 using Maliev.CompensationService.Application.DTOs;
 using Maliev.CompensationService.Application.Queries;
 using Maliev.CompensationService.Domain.Authorization;
-using Maliev.CompensationService.Application.Common.Mediator;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Maliev.CompensationService.Api.Controllers;

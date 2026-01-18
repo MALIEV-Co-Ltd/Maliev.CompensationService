@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using Maliev.CompensationService.Domain.Enums;
 
 namespace Maliev.CompensationService.Domain.Entities;

@@ -97,6 +97,84 @@ public class BenefitsControllerTests : IClassFixture<WebApplicationFactory<Progr
     }
 
     [Fact]
+    public async Task GetAvailableBenefits_ShouldReturnOk()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<CompensationDbContext>();
+            await context.Database.EnsureCreatedAsync();
+
+            if (!await context.Set<Benefit>().AnyAsync(b => b.Name == "Dental"))
+            {
+                context.Set<Benefit>().Add(new Benefit { Id = Guid.NewGuid(), Name = "Dental", BenefitType = BenefitType.DentalInsurance, IsActive = true });
+                await context.SaveChangesAsync();
+            }
+        }
+
+        // Act
+        var response = await client.GetAsync("/compensation/v1/benefits");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonSnakeCaseAsync<IEnumerable<BenefitDto>>();
+        Assert.NotEmpty(result!);
+    }
+
+    [Fact]
+    public async Task AddDependent_ShouldReturnOk()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        var employeeId = Guid.NewGuid();
+        Guid benefitId;
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<CompensationDbContext>();
+            await context.Database.EnsureCreatedAsync();
+
+            var benefit = new Benefit { Id = Guid.NewGuid(), Name = "AddDep Health", BenefitType = BenefitType.HealthInsurance, IsActive = true };
+            context.Set<Benefit>().Add(benefit);
+            await context.SaveChangesAsync();
+            benefitId = benefit.Id;
+        }
+
+        var enrollData = new EnrollInBenefitDto
+        {
+            BenefitId = benefitId,
+            EnrollmentDate = DateTime.UtcNow,
+            EmployeeContribution = 100,
+            CoverageLevel = "Individual",
+            Dependents = new List<DependentDto>()
+        };
+
+        var enrollResponse = await client.PostAsJsonSnakeCaseAsync($"/compensation/v1/employees/{employeeId}/benefits/enrollments", enrollData);
+        var enrollment = await enrollResponse.Content.ReadFromJsonSnakeCaseAsync<BenefitsEnrollmentDto>();
+        var enrollmentId = enrollment!.Id;
+
+        var dependent = new DependentDto
+        {
+            FirstName = "John",
+            LastName = "Doe",
+            Relationship = DependentRelationship.Child,
+            DateOfBirth = new DateTime(2010, 1, 1),
+            NationalId = "123456789"
+        };
+
+        // Act
+        var response = await client.PostAsJsonSnakeCaseAsync($"/compensation/v1/employees/{employeeId}/benefits/enrollments/{enrollmentId}/dependents", dependent);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonSnakeCaseAsync<DependentDto>();
+        Assert.NotNull(result);
+        Assert.Equal("John", result.FirstName);
+    }
+
+    [Fact]
     public async Task UpdateBenefitsEnrollment_ShouldReturnOk()
     {
         // Arrange

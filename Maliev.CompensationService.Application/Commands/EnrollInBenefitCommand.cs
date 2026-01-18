@@ -1,5 +1,5 @@
-using Maliev.CompensationService.Application.DTOs;
 using Maliev.CompensationService.Application.Common.Mediator;
+using Maliev.CompensationService.Application.DTOs;
 
 namespace Maliev.CompensationService.Application.Commands;
 

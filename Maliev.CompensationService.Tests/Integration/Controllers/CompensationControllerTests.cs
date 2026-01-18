@@ -130,7 +130,76 @@ public class CompensationControllerTests : IClassFixture<WebApplicationFactory<P
     }
 
     [Fact]
+    public async Task GetCompensationHistory_ShouldReturnOk()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        var employeeId = Guid.NewGuid();
+        var compensationRecordId = Guid.NewGuid();
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<CompensationDbContext>();
+            await context.Database.EnsureCreatedAsync();
+
+            var record = new CompensationRecord
+            {
+                Id = compensationRecordId,
+                EmployeeId = employeeId,
+                BaseSalary = 50000,
+                IsCurrent = false,
+                EffectiveDate = DateTime.UtcNow.AddYears(-1),
+                CreatedDate = DateTime.UtcNow
+            };
+            context.Set<CompensationRecord>().Add(record);
+
+            context.Set<SalaryHistory>().Add(new SalaryHistory
+            {
+                Id = Guid.NewGuid(),
+                EmployeeId = employeeId,
+                CompensationRecordId = compensationRecordId,
+                NewSalary = 55000,
+                EffectiveDate = DateTime.UtcNow,
+                CreatedDate = DateTime.UtcNow
+            });
+            await context.SaveChangesAsync();
+        }
+
+        // Act
+        var response = await client.GetAsync($"/compensation/v1/employees/{employeeId}/history");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var history = await response.Content.ReadFromJsonSnakeCaseAsync<IEnumerable<SalaryHistoryDto>>();
+        Assert.NotNull(history);
+        Assert.NotEmpty(history);
+    }
+
+    [Fact]
+    public async Task GetBenefits_ShouldReturnOk()
+    {
+        // Arrange
+        var client = _factory.CreateClient();
+        var employeeId = Guid.NewGuid();
+
+        using (var scope = _factory.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<CompensationDbContext>();
+            await context.Database.EnsureCreatedAsync();
+        }
+
+        // Act
+        var response = await client.GetAsync($"/compensation/v1/employees/{employeeId}/benefits");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var benefits = await response.Content.ReadFromJsonSnakeCaseAsync<IEnumerable<BenefitsEnrollmentDto>>();
+        Assert.NotNull(benefits);
+    }
+
+    [Fact]
     public async Task RecordCompensationChange_ShouldReturnConflict_WhenConcurrentUpdateOccurs()
+
     {
         // Arrange
         var client = _factory.CreateClient();

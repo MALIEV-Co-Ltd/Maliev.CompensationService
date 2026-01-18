@@ -1,15 +1,11 @@
-using Maliev.Aspire.ServiceDefaults;
 using Maliev.CompensationService.Api.Filters;
 using Maliev.CompensationService.Application.Interfaces;
 using Maliev.CompensationService.Application.Queries.Handlers;
-using Maliev.CompensationService.Domain.Authorization;
+using Maliev.CompensationService.Infrastructure.Consumers;
 using Maliev.CompensationService.Infrastructure.Data;
 using Maliev.CompensationService.Infrastructure.Repositories;
 using Maliev.CompensationService.Infrastructure.Services;
-using Maliev.CompensationService.Infrastructure.Consumers;
 using Microsoft.EntityFrameworkCore;
-using Maliev.CompensationService.Application.Common.Mediator;
-using Microsoft.Extensions.Logging;
 
 // Initialize bootstrap logging
 using var loggerFactory = LoggerFactory.Create(logBuilder => logBuilder.AddConsole());

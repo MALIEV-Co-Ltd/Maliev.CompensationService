@@ -58,7 +58,10 @@ public class BenefitsRepository : IBenefitsRepository
     /// <inheritdoc />
     public async Task UpdateEnrollmentAsync(BenefitsEnrollment enrollment, CancellationToken cancellationToken = default)
     {
-        _context.Set<BenefitsEnrollment>().Update(enrollment);
+        if (_context.Entry(enrollment).State == EntityState.Detached)
+        {
+            _context.Set<BenefitsEnrollment>().Update(enrollment);
+        }
         await _context.SaveChangesAsync(cancellationToken);
     }
 

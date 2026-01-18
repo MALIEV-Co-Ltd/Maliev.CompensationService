@@ -1,9 +1,9 @@
 using Maliev.Aspire.ServiceDefaults.Authorization;
 using Maliev.CompensationService.Application.Commands;
+using Maliev.CompensationService.Application.Common.Mediator;
 using Maliev.CompensationService.Application.DTOs;
 using Maliev.CompensationService.Application.Queries;
 using Maliev.CompensationService.Domain.Authorization;
-using Maliev.CompensationService.Application.Common.Mediator;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -87,6 +87,7 @@ public class CompensationController : BaseController
     /// <param name="employeeId">Unique identifier of the employee.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A collection of historical salary records.</returns>
+    [HttpGet("{employeeId:guid}/history")]
     [RequirePermission(CompensationPermissions.Read)]
     public async Task<ActionResult<IEnumerable<SalaryHistoryDto>>> GetCompensationHistory(Guid employeeId, CancellationToken cancellationToken)
     {
@@ -106,100 +107,9 @@ public class CompensationController : BaseController
     }
 
     /// <summary>
-    /// Gets all benefit enrollments for a specific employee.
-    /// </summary>
-    /// <param name="employeeId">Unique identifier of the employee.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>A collection of benefit enrollments.</returns>
-    [RequirePermission(CompensationPermissions.Read)]
-    public async Task<ActionResult<IEnumerable<BenefitsEnrollmentDto>>> GetBenefits(Guid employeeId, CancellationToken cancellationToken)
-    {
-        var query = new GetEmployeeBenefitsQuery(employeeId);
-        var result = await _mediator.Send(query, cancellationToken);
-
-        if (!HasPermission(CompensationPermissions.ReadSensitive))
-        {
-            foreach (var enrollment in result)
-            {
-                foreach (var dependent in enrollment.Dependents)
-                {
-                    if (!string.IsNullOrEmpty(dependent.NationalId))
-                    {
-                        dependent.NationalId = "********";
-                    }
-                }
-            }
-        }
-
-        return Ok(result);
-    }
-
-    /// <summary>
-    /// Enrolls an employee in a benefit program.
-    /// </summary>
-    /// <param name="employeeId">Unique identifier of the employee.</param>
-    /// <param name="benefitId">Unique identifier of the benefit program.</param>
-    /// <param name="dto">Enrollment details.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The created benefit enrollment.</returns>
-    [HttpPost("{employeeId:guid}/benefits/{benefitId:guid}/enroll")]
-    [RequirePermission(CompensationPermissions.Update)]
-    public async Task<ActionResult<BenefitsEnrollmentDto>> EnrollInBenefit(
-        Guid employeeId,
-        Guid benefitId,
-        [FromBody] EnrollInBenefitDto dto,
-        CancellationToken cancellationToken)
-    {
-        var command = new EnrollInBenefitsCommand(employeeId, benefitId, dto);
-        var result = await _mediator.Send(command, cancellationToken);
-        return CreatedAtAction(nameof(GetBenefits), new { employeeId }, result);
-    }
-
-    /// <summary>
-    /// Updates an existing benefit enrollment.
-    /// </summary>
-    /// <param name="employeeId">Unique identifier of the employee.</param>
-    /// <param name="enrollmentId">Unique identifier of the enrollment.</param>
-    /// <param name="dto">Updated enrollment details.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The updated benefit enrollment.</returns>
-    [HttpPut("{employeeId:guid}/benefits/{enrollmentId:guid}")]
-    [RequirePermission(CompensationPermissions.Update)]
-    public async Task<ActionResult<BenefitsEnrollmentDto>> UpdateBenefitEnrollment(
-        Guid employeeId,
-        Guid enrollmentId,
-        [FromBody] UpdateBenefitsEnrollmentDto dto,
-        CancellationToken cancellationToken)
-    {
-        var command = new UpdateBenefitsEnrollmentCommand(enrollmentId, dto);
-        var result = await _mediator.Send(command, cancellationToken);
-        return Ok(result);
-    }
-
-    /// <summary>
-    /// Adds a dependent to a benefit enrollment.
-    /// </summary>
-    /// <param name="employeeId">Unique identifier of the employee.</param>
-    /// <param name="enrollmentId">Unique identifier of the enrollment.</param>
-    /// <param name="dto">Dependent details.</param>
-    /// <param name="cancellationToken">Cancellation token.</param>
-    /// <returns>The created dependent.</returns>
-    [HttpPost("{employeeId:guid}/benefits/{enrollmentId:guid}/dependents")]
-    [RequirePermission(CompensationPermissions.Update)]
-    public async Task<ActionResult<DependentDto>> AddDependent(
-        Guid employeeId,
-        Guid enrollmentId,
-        [FromBody] DependentDto dto,
-        CancellationToken cancellationToken)
-    {
-        var command = new AddDependentCommand(enrollmentId, dto);
-        var result = await _mediator.Send(command, cancellationToken);
-        return Ok(result);
-    }
-
-    /// <summary>
     /// Applies a bulk salary increase.
     /// </summary>
+
     /// <param name="request">Bulk increase request details.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Result of the bulk operation.</returns>

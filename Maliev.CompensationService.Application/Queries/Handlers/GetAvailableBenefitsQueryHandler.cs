@@ -1,9 +1,9 @@
-using System.Text.Json;
+using Maliev.CompensationService.Application.Common.Mediator;
 using Maliev.CompensationService.Application.DTOs;
 using Maliev.CompensationService.Application.Interfaces;
 using Maliev.CompensationService.Application.Mappers;
-using Maliev.CompensationService.Application.Common.Mediator;
 using Microsoft.Extensions.Caching.Distributed;
+using System.Text.Json;
 
 namespace Maliev.CompensationService.Application.Queries.Handlers;
 

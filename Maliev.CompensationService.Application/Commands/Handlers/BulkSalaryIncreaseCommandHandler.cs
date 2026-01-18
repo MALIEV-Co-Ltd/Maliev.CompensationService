@@ -1,15 +1,12 @@
+using Maliev.CompensationService.Application.Common.Mediator;
 using Maliev.CompensationService.Application.Interfaces;
-using Maliev.CompensationService.Domain.IntegrationEvents;
 using Maliev.CompensationService.Domain.Entities;
 using Maliev.CompensationService.Domain.Enums;
+using Maliev.MessagingContracts.Generated;
 using MassTransit;
-using Maliev.CompensationService.Application.Common.Mediator;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using System.Text.Json;
-using Maliev.CompensationService.Domain.Events;
-using Maliev.CompensationService.Application.DTOs;
-using Maliev.CompensationService.Application.Commands;
 
 namespace Maliev.CompensationService.Application.Commands.Handlers;
 
@@ -102,17 +99,16 @@ public class BulkSalaryIncreaseCommandHandler : IRequestHandler<BulkSalaryIncrea
                 var increaseAmount = oldSalary * (request.PercentageIncrease / 100);
                 var newSalary = oldSalary + increaseAmount;
 
+                // Update old record to not be current
+                record.IsCurrent = false;
+                record.ModifiedDate = DateTime.UtcNow;
+                await _compRepository.UpdateAsync(record, cancellationToken);
+
                 // Create new record
-
                 var newRecord = new CompensationRecord
-
                 {
-
                     Id = Guid.NewGuid(),
-
                     EmployeeId = record.EmployeeId,
-
-
                     DepartmentId = record.DepartmentId,
                     BaseSalary = newSalary,
                     Currency = record.Currency,
@@ -147,13 +143,25 @@ public class BulkSalaryIncreaseCommandHandler : IRequestHandler<BulkSalaryIncrea
 
                 // Publish Event
                 await _publishEndpoint.Publish(new SalaryChangedEvent(
-                    record.EmployeeId,
-                    newRecord.Id,
-                    newSalary,
-                    oldSalary,
-                    request.PercentageIncrease,
-                    request.EffectiveDate,
-                    request.Reason
+                    MessageId: Guid.NewGuid(),
+                    MessageName: nameof(SalaryChangedEvent),
+                    MessageType: MessageType.Event,
+                    MessageVersion: "1.0.0",
+                    PublishedBy: "CompensationService",
+                    ConsumedBy: Array.Empty<string>(),
+                    CorrelationId: Guid.NewGuid(),
+                    CausationId: null,
+                    OccurredAtUtc: DateTimeOffset.UtcNow,
+                    IsPublic: false,
+                    Payload: new SalaryChangedEventPayload(
+                        EmployeeId: record.EmployeeId,
+                        CompensationRecordId: newRecord.Id,
+                        NewSalary: (double)newSalary,
+                        PreviousSalary: (double)oldSalary,
+                        ChangePercentage: (double)request.PercentageIncrease,
+                        EffectiveDate: request.EffectiveDate,
+                        ChangeReason: request.Reason
+                    )
                 ), cancellationToken);
 
                 processedCount++;
@@ -179,10 +187,22 @@ public class BulkSalaryIncreaseCommandHandler : IRequestHandler<BulkSalaryIncrea
 
         // 5. Publish Completion Event
         await _publishEndpoint.Publish(new BulkSalaryIncreaseCompletedEvent(
-            job.Id,
-            processedCount,
-            failedCount,
-            totalIncrease
+            MessageId: Guid.NewGuid(),
+            MessageName: nameof(BulkSalaryIncreaseCompletedEvent),
+            MessageType: MessageType.Event,
+            MessageVersion: "1.0.0",
+            PublishedBy: "CompensationService",
+            ConsumedBy: Array.Empty<string>(),
+            CorrelationId: Guid.NewGuid(),
+            CausationId: null,
+            OccurredAtUtc: DateTimeOffset.UtcNow,
+            IsPublic: false,
+            Payload: new BulkSalaryIncreaseCompletedEventPayload(
+                JobId: job.Id,
+                SuccessCount: processedCount,
+                FailureCount: failedCount,
+                TotalBudgetImpact: (double)totalIncrease
+            )
         ), cancellationToken);
 
         return new BulkSalaryIncreaseResultDto

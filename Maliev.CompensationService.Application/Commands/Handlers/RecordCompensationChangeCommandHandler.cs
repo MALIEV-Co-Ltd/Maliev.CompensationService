@@ -1,10 +1,10 @@
+using Maliev.CompensationService.Application.Common.Mediator;
 using Maliev.CompensationService.Application.DTOs;
 using Maliev.CompensationService.Application.Interfaces;
 using Maliev.CompensationService.Application.Mappers;
 using Maliev.CompensationService.Domain.Entities;
-using Maliev.CompensationService.Domain.Events;
+using Maliev.MessagingContracts.Generated;
 using MassTransit;
-using Maliev.CompensationService.Application.Common.Mediator;
 
 namespace Maliev.CompensationService.Application.Commands.Handlers;
 
@@ -96,13 +96,25 @@ public class RecordCompensationChangeCommandHandler : IRequestHandler<RecordComp
             await _historyRepository.AddAsync(history, ct);
 
             await _publishEndpoint.Publish(new SalaryChangedEvent(
-                request.EmployeeId,
-                newRecord.Id,
-                request.Data.NewBaseSalary,
-                previousSalary,
-                Math.Round(changePercentage, 2),
-                request.Data.EffectiveDate,
-                request.Data.ChangeReason ?? string.Empty
+                MessageId: Guid.NewGuid(),
+                MessageName: nameof(SalaryChangedEvent),
+                MessageType: MessageType.Event,
+                MessageVersion: "1.0.0",
+                PublishedBy: "CompensationService",
+                ConsumedBy: Array.Empty<string>(),
+                CorrelationId: Guid.NewGuid(),
+                CausationId: null,
+                OccurredAtUtc: DateTimeOffset.UtcNow,
+                IsPublic: false,
+                Payload: new SalaryChangedEventPayload(
+                    EmployeeId: request.EmployeeId,
+                    CompensationRecordId: newRecord.Id,
+                    NewSalary: (double)request.Data.NewBaseSalary,
+                    PreviousSalary: (double)previousSalary,
+                    ChangePercentage: (double)Math.Round(changePercentage, 2),
+                    EffectiveDate: request.Data.EffectiveDate,
+                    ChangeReason: request.Data.ChangeReason ?? string.Empty
+                )
             ), ct);
 
             return history.ToDto();

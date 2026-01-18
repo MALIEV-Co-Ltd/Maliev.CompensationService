@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Maliev.CompensationService.Application.Interfaces;
 
 namespace Maliev.CompensationService.Infrastructure.Data;
 

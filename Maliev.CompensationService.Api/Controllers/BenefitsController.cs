@@ -1,9 +1,9 @@
 using Maliev.Aspire.ServiceDefaults.Authorization;
 using Maliev.CompensationService.Application.Commands;
+using Maliev.CompensationService.Application.Common.Mediator;
 using Maliev.CompensationService.Application.DTOs;
 using Maliev.CompensationService.Application.Queries;
 using Maliev.CompensationService.Domain.Authorization;
-using Maliev.CompensationService.Application.Common.Mediator;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Maliev.CompensationService.Api.Controllers;
@@ -120,5 +120,28 @@ public class BenefitsController : BaseController
 
         return NoContent();
     }
+
+    /// <summary>
+    /// Adds a dependent to a benefit enrollment
+    /// </summary>
+    /// <param name="employeeId">Unique identifier of the employee</param>
+    /// <param name="enrollmentId">Unique identifier of the enrollment</param>
+    /// <param name="dto">Dependent details</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The created dependent record</returns>
+    [HttpPost("{employeeId:guid}/benefits/enrollments/{enrollmentId:guid}/dependents")]
+    [RequirePermission(CompensationPermissions.Update)]
+    public async Task<ActionResult<DependentDto>> AddDependent(
+        Guid employeeId,
+        Guid enrollmentId,
+        [FromBody] DependentDto dto,
+        CancellationToken cancellationToken)
+    {
+        var command = new AddDependentCommand(enrollmentId, dto);
+        var result = await _mediator.Send(command, cancellationToken);
+
+        return Ok(result);
+    }
 }
+
 

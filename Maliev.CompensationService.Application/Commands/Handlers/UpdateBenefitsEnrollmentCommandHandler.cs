@@ -1,7 +1,7 @@
+using Maliev.CompensationService.Application.Common.Mediator;
 using Maliev.CompensationService.Application.DTOs;
 using Maliev.CompensationService.Application.Interfaces;
 using Maliev.CompensationService.Application.Mappers;
-using Maliev.CompensationService.Application.Common.Mediator;
 
 namespace Maliev.CompensationService.Application.Commands.Handlers;
 

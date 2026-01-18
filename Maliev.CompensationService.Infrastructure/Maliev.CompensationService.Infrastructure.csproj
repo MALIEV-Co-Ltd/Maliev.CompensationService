@@ -8,16 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MassTransit.Abstractions" Version="[8.5.7, 9.0.0)" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.2">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.2" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Maliev.CompensationService.Application\Maliev.CompensationService.Application.csproj" />
     <ProjectReference Include="..\Maliev.CompensationService.Domain\Maliev.CompensationService.Domain.csproj" />
     <ProjectReference Include="..\..\Maliev.Aspire\Maliev.Aspire.ServiceDefaults\Maliev.Aspire.ServiceDefaults.csproj" />

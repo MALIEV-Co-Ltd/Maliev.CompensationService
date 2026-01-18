@@ -27,6 +27,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Maliev.CompensationService.Api\Maliev.CompensationService.Api.csproj" />
+    <ProjectReference Include="..\..\Maliev.MessagingContracts\generated\csharp\Maliev.MessagingContracts.csproj" />
   </ItemGroup>
 
 </Project>

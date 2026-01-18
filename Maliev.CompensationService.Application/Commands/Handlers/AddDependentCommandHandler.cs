@@ -1,7 +1,8 @@
+using Maliev.CompensationService.Application.Common.Mediator;
 using Maliev.CompensationService.Application.DTOs;
 using Maliev.CompensationService.Application.Interfaces;
+using Maliev.CompensationService.Application.Mappers;
 using Maliev.CompensationService.Domain.Entities;
-using Maliev.CompensationService.Application.Common.Mediator;
 
 namespace Maliev.CompensationService.Application.Commands.Handlers;
 
@@ -27,32 +28,19 @@ public class AddDependentCommandHandler : IRequestHandler<AddDependentCommand, D
         var enrollment = await _benefitsRepository.GetEnrollmentByIdAsync(request.EnrollmentId, cancellationToken);
         if (enrollment == null)
         {
-            throw new InvalidOperationException("Enrollment not found");
+            throw new InvalidOperationException($"Enrollment with ID {request.EnrollmentId} not found");
         }
 
-        var dependent = new Dependent
+        if (enrollment.Dependents == null)
         {
-            Id = Guid.NewGuid(),
-            BenefitsEnrollmentId = request.EnrollmentId,
-            FirstName = request.Data.FirstName,
-            LastName = request.Data.LastName,
-            Relationship = request.Data.Relationship,
-            DateOfBirth = request.Data.DateOfBirth,
-            NationalId = request.Data.NationalId,
-            CreatedDate = DateTime.UtcNow
-        };
+            enrollment.Dependents = new List<Dependent>();
+        }
+
+        var dependent = request.Data.ToEntity(request.EnrollmentId);
 
         enrollment.Dependents.Add(dependent);
         await _benefitsRepository.UpdateEnrollmentAsync(enrollment, cancellationToken);
 
-        return new DependentDto
-        {
-            Id = dependent.Id,
-            FirstName = dependent.FirstName,
-            LastName = dependent.LastName,
-            Relationship = dependent.Relationship,
-            DateOfBirth = dependent.DateOfBirth,
-            NationalId = dependent.NationalId
-        };
+        return dependent.ToDto();
     }
 }

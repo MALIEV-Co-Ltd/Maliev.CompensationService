@@ -9,15 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.2" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.2">
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-      <PrivateAssets>all</PrivateAssets>
-    </PackageReference>
-    <PackageReference Include="Scalar.AspNetCore" Version="2.12.8" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Maliev.CompensationService.Application\Maliev.CompensationService.Application.csproj" />
     <ProjectReference Include="..\Maliev.CompensationService.Infrastructure\Maliev.CompensationService.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Maliev.Aspire\Maliev.Aspire.ServiceDefaults\Maliev.Aspire.ServiceDefaults.csproj" />
