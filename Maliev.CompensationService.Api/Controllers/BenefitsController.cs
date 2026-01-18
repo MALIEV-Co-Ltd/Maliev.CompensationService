@@ -71,8 +71,7 @@ public class BenefitsController : BaseController
         [FromBody] EnrollInBenefitDto data,
         CancellationToken cancellationToken)
     {
-        var createdBy = GetCurrentUserId();
-        var command = new EnrollInBenefitCommand(employeeId, data, createdBy);
+        var command = new EnrollInBenefitsCommand(employeeId, data.BenefitId, data);
         var result = await _mediator.Send(command, cancellationToken);
 
         return CreatedAtAction(nameof(EnrollInBenefit), new { employeeId }, result);

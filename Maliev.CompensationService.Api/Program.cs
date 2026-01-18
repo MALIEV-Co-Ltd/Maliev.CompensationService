@@ -79,8 +79,11 @@ try
     builder.Services.AddScoped<Maliev.CompensationService.Application.Common.Mediator.IMediator, Maliev.CompensationService.Application.Common.Mediator.Mediator>();
 
     // Register Handlers
-    var assembly = typeof(GetCompensationDetailsQueryHandler).Assembly;
-    var handlerTypes = assembly.GetTypes()
+    var queryAssembly = typeof(GetCompensationDetailsQueryHandler).Assembly;
+    var commandAssembly = typeof(Maliev.CompensationService.Application.Commands.Handlers.EnrollInBenefitCommandHandler).Assembly;
+    
+    var assemblies = new[] { queryAssembly, commandAssembly };
+    var handlerTypes = assemblies.SelectMany(a => a.GetTypes())
         .Where(t => !t.IsAbstract && !t.IsInterface)
         .Where(t => t.GetInterfaces().Any(i => i.IsGenericType &&
             (i.GetGenericTypeDefinition() == typeof(Maliev.CompensationService.Application.Common.Mediator.IRequestHandler<,>) ||
