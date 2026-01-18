@@ -62,6 +62,11 @@ public class BenefitsRepository : IBenefitsRepository
         {
             _context.Set<BenefitsEnrollment>().Update(enrollment);
         }
+        else
+        {
+            // Update modified date if tracked
+            enrollment.ModifiedDate = DateTime.UtcNow;
+        }
         await _context.SaveChangesAsync(cancellationToken);
     }
 
