@@ -58,7 +58,16 @@ public class BenefitsRepository : IBenefitsRepository
     /// <inheritdoc />
     public async Task UpdateEnrollmentAsync(BenefitsEnrollment enrollment, CancellationToken cancellationToken = default)
     {
-        _context.Set<BenefitsEnrollment>().Update(enrollment);
+        var entry = _context.Entry(enrollment);
+        if (entry.State == EntityState.Detached)
+        {
+            _context.Set<BenefitsEnrollment>().Update(enrollment);
+        }
+        else
+        {
+            entry.State = EntityState.Modified;
+            enrollment.ModifiedDate = DateTime.UtcNow;
+        }
         await _context.SaveChangesAsync(cancellationToken);
     }
 
@@ -75,6 +84,13 @@ public class BenefitsRepository : IBenefitsRepository
             enrollment.TerminationDate = terminationDate;
         }
 
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task AddDependentAsync(Dependent dependent, CancellationToken cancellationToken = default)
+    {
+        await _context.Set<Dependent>().AddAsync(dependent, cancellationToken);
         await _context.SaveChangesAsync(cancellationToken);
     }
 

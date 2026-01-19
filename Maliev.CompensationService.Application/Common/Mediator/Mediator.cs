@@ -1,5 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
-
 namespace Maliev.CompensationService.Application.Common.Mediator;
 
 /// <summary>

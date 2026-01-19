@@ -1,8 +1,8 @@
+using Maliev.CompensationService.Application.Common.Mediator;
 using Maliev.CompensationService.Application.Interfaces;
 using Maliev.CompensationService.Domain.Enums;
-using Maliev.CompensationService.Domain.Events;
+using Maliev.MessagingContracts.Generated;
 using MassTransit;
-using Maliev.CompensationService.Application.Common.Mediator;
 
 namespace Maliev.CompensationService.Application.Commands.Handlers;
 
@@ -42,10 +42,22 @@ public class TerminateBenefitCommandHandler : IRequestHandler<TerminateBenefitCo
 
         // Publish event
         await _publishEndpoint.Publish(new BenefitEnrolledEvent(
-            enrollment.EmployeeId,
-            enrollment.BenefitId,
-            enrollment.Status.ToString(),
-            request.TerminationDate
+            MessageId: Guid.NewGuid(),
+            MessageName: nameof(BenefitEnrolledEvent),
+            MessageType: MessageType.Event,
+            MessageVersion: "1.0.0",
+            PublishedBy: "CompensationService",
+            ConsumedBy: Array.Empty<string>(),
+            CorrelationId: Guid.NewGuid(),
+            CausationId: null,
+            OccurredAtUtc: DateTimeOffset.UtcNow,
+            IsPublic: false,
+            Payload: new BenefitEnrolledEventPayload(
+                EmployeeId: enrollment.EmployeeId,
+                BenefitId: enrollment.BenefitId,
+                Status: enrollment.Status.ToString(),
+                EffectiveDate: request.TerminationDate
+            )
         ), cancellationToken);
 
         return Unit.Value;

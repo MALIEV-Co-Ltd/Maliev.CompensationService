@@ -1,5 +1,4 @@
 using Maliev.CompensationService.Domain.Entities;
-using Maliev.CompensationService.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 

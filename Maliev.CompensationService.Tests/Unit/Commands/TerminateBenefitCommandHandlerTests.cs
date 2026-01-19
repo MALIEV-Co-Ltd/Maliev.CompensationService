@@ -3,7 +3,7 @@ using Maliev.CompensationService.Application.Commands.Handlers;
 using Maliev.CompensationService.Application.Interfaces;
 using Maliev.CompensationService.Domain.Entities;
 using Maliev.CompensationService.Domain.Enums;
-using Maliev.CompensationService.Domain.Events;
+using Maliev.MessagingContracts.Generated;
 using MassTransit;
 using Moq;
 using Xunit;

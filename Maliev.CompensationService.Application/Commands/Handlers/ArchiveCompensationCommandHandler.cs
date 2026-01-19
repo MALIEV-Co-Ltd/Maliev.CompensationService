@@ -1,6 +1,6 @@
 using Maliev.CompensationService.Application.Common.Mediator;
 using Maliev.CompensationService.Application.Interfaces;
-using Maliev.CompensationService.Domain.IntegrationEvents;
+using Maliev.MessagingContracts.Generated;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 
@@ -45,7 +45,22 @@ public class ArchiveCompensationCommandHandler : IRequestHandler<ArchiveCompensa
             await _compRepository.UpdateAsync(currentRecord, cancellationToken);
         }
 
-        await _publishEndpoint.Publish(new CompensationArchivedEvent(request.EmployeeId, request.CorrelationId), cancellationToken);
+        await _publishEndpoint.Publish(new CompensationArchivedEvent(
+            MessageId: Guid.NewGuid(),
+            MessageName: nameof(CompensationArchivedEvent),
+            MessageType: MessageType.Event,
+            MessageVersion: "1.0.0",
+            PublishedBy: "CompensationService",
+            ConsumedBy: Array.Empty<string>(),
+            CorrelationId: request.CorrelationId,
+            CausationId: null,
+            OccurredAtUtc: DateTimeOffset.UtcNow,
+            IsPublic: false,
+            Payload: new CompensationArchivedEventPayload(
+                EmployeeId: request.EmployeeId,
+                ArchivedAt: DateTimeOffset.UtcNow
+            )
+        ), cancellationToken);
 
         return true;
     }

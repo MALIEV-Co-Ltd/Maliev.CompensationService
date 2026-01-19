@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc.Filters;
-using Microsoft.Extensions.Logging;
 
 namespace Maliev.CompensationService.Api.Filters;
 
