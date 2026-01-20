@@ -22,41 +22,43 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout Service
         uses: actions/checkout@v5
+        with:
+          path: service
+
+      - name: Checkout Shared Aspire Defaults
+        uses: actions/checkout@v5
+        with:
+          repository: MALIEV-Co-Ltd/Maliev.Aspire
+          ref: feat/platform-modernization
+          token: ${{ secrets.gitops_pat }}
+          path: Maliev.Aspire
+
+      - name: Checkout Shared Messaging Contracts
+        uses: actions/checkout@v5
+        with:
+          repository: MALIEV-Co-Ltd/Maliev.MessagingContracts
+          ref: feat/platform-modernization
+          token: ${{ secrets.gitops_pat }}
+          path: Maliev.MessagingContracts
 
       - name: Set up .NET
         uses: actions/setup-dotnet@v5
         with:
           dotnet-version: "10.x"
 
-      - name: Switch to PackageReference for CI build
-        run: |
-          # Determine version format based on branch
-          TARGET_BRANCH="${{ github.base_ref || github.ref_name }}"
-          
-          if [[ "$TARGET_BRANCH" == "main" || "$TARGET_BRANCH" == "master" ]]; then
-            VERSION_FORMAT="1.0.*"
-          else
-            VERSION_FORMAT="1.0.*-*"
-          fi
-
-          echo "Target branch is $TARGET_BRANCH. Using version format: $VERSION_FORMAT"
-
-          # Replace ProjectReference with PackageReference in all service csproj files
-          find . -name "*.csproj" -type f -exec sed -i             's|<ProjectReference Include=".*Maliev.Aspire.ServiceDefaults.*.csproj" />|<PackageReference Include="Maliev.Aspire.ServiceDefaults" Version="'$VERSION_FORMAT'" />|g'             {} \;
-          find . -name "*.csproj" -type f -exec sed -i             's|<ProjectReference Include=".*Maliev.MessagingContracts.*.csproj" />|<PackageReference Include="Maliev.MessagingContracts" Version="'$VERSION_FORMAT'" />|g'             {} \;
-          echo "Switched to PackageReference for ServiceDefaults and MessagingContracts"
-
       - name: Restore dependencies
         run: dotnet restore ${{ inputs.solution_file }} ${{ inputs.extra_args }}
+        working-directory: service
         env:
           NUGET_USERNAME: ${{ github.actor }}
           NUGET_PASSWORD: ${{ secrets.gitops_pat }}
 
       - name: Build
         run: dotnet build ${{ inputs.solution_file }} --no-restore --configuration ${{ inputs.configuration }} ${{ inputs.extra_args }}
+        working-directory: service
 
       - name: Test
         run: dotnet test ${{ inputs.solution_file }} --no-build --configuration ${{ inputs.configuration }} --verbosity normal ${{ inputs.extra_args }}
-        working-directory: ${{ github.workspace }}
+        working-directory: service
