@@ -1,0 +1,14 @@
+<Project>
+  <ItemGroup>
+    <PackageReference Update="Microsoft.AspNetCore.OpenApi" Version="10.0.2" />
+    <PackageReference Update="Microsoft.EntityFrameworkCore" Version="10.0.2" />
+    <PackageReference Update="Microsoft.EntityFrameworkCore.Relational" Version="10.0.2" />
+    <PackageReference Update="Microsoft.EntityFrameworkCore.Abstractions" Version="10.0.2" />
+    <PackageReference Update="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.2" />
+    <PackageReference Update="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.2" />
+    <PackageReference Update="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.2" />
+    <PackageReference Update="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.2" />
+    <PackageReference Update="Microsoft.Extensions.Logging.Abstractions" Version="10.0.2" />
+    <PackageReference Update="Microsoft.Extensions.Options" Version="10.0.2" />
+  </ItemGroup>
+</Project>
