@@ -10,8 +10,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout service
         uses: actions/checkout@v5
+
+      - name: Checkout Shared Aspire Defaults
+        uses: actions/checkout@v5
+        with:
+          repository: MALIEV-Co-Ltd/Maliev.Aspire
+          ref: develop
+          token: ${{ secrets.GITOPS_PAT }}
+          path: Maliev.Aspire
+
+      - name: Checkout Shared Messaging Contracts
+        uses: actions/checkout@v5
+        with:
+          repository: MALIEV-Co-Ltd/Maliev.MessagingContracts
+          ref: develop
+          token: ${{ secrets.GITOPS_PAT }}
+          path: Maliev.MessagingContracts
 
       - name: Set up .NET
         uses: actions/setup-dotnet@v5
