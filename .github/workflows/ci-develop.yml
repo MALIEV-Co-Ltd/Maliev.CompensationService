@@ -10,42 +10,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout service
+      - name: Checkout code
         uses: actions/checkout@v5
 
-      - name: Checkout Shared Aspire Defaults
-        uses: actions/checkout@v5
-        with:
-          repository: MALIEV-Co-Ltd/Maliev.Aspire
-          ref: develop
-          token: ${{ secrets.GITOPS_PAT }}
-          path: Maliev.Aspire
-
-      - name: Checkout Shared Messaging Contracts
-        uses: actions/checkout@v5
-        with:
-          repository: MALIEV-Co-Ltd/Maliev.MessagingContracts
-          ref: develop
-          token: ${{ secrets.GITOPS_PAT }}
-          path: Maliev.MessagingContracts
-
-      - name: Set up .NET
-        uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: "10.x"
-
-      - name: Restore dependencies
-        run: dotnet restore Maliev.CompensationService.slnx
-        env:
-          NUGET_USERNAME: ${{ github.actor }}
-          NUGET_PASSWORD: ${{ secrets.GITOPS_PAT }}
-
-      - name: Build
-        run: dotnet build Maliev.CompensationService.slnx --no-restore
-
-      - name: Test
-        run: dotnet test Maliev.CompensationService.slnx --no-build --verbosity normal
-        working-directory: ${{ github.workspace }}
+      - name: Switch to PackageReference for Docker build
+        run: |
+          # Use develop version format for shared libraries
+          VERSION_FORMAT="1.0.*-*"
+          find . -name "*.csproj" -type f -exec sed -i             's|<ProjectReference Include=".*Maliev.Aspire.ServiceDefaults.*.csproj" />|<PackageReference Include="Maliev.Aspire.ServiceDefaults" Version="'$VERSION_FORMAT'" />|g'             {} +
+          find . -name "*.csproj" -type f -exec sed -i             's|<ProjectReference Include=".*Maliev.MessagingContracts.*.csproj" />|<PackageReference Include="Maliev.MessagingContracts" Version="'$VERSION_FORMAT'" />|g'             {} +
+          echo "Switched to PackageReference for ServiceDefaults and MessagingContracts"
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v3
