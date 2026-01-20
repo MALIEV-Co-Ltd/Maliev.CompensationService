@@ -9,26 +9,8 @@ on:
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-
-      - name: Set up .NET
-        uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: "10.x"
-
-      - name: Restore dependencies
-        run: dotnet restore Maliev.CompensationService.slnx
-        env:
-          NUGET_USERNAME: ${{ github.actor }}
-          NUGET_PASSWORD: ${{ secrets.GITOPS_PAT }}
-
-      - name: Build
-        run: dotnet build Maliev.CompensationService.slnx --no-restore --configuration Release
-
-      - name: Test
-        run: dotnet test Maliev.CompensationService.slnx --no-build --configuration Release --verbosity normal
-        working-directory: ${{ github.workspace }}
+    uses: ./.github/workflows/_build-and-test.yml
+    with:
+      solution_file: Maliev.CompensationService.slnx
+    secrets:
+      gitops_pat: ${{ secrets.GITOPS_PAT }}
