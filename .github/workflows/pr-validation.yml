@@ -20,36 +20,15 @@ jobs:
         with:
           dotnet-version: "10.x"
 
-      - name: Switch to PackageReference for CI build
-        run: |
-          # Determine version format based on target branch
-          BASE_BRANCH="${{ github.base_ref }}"
-          if [ "$BASE_BRANCH" == "main" ]; then
-            VERSION_FORMAT="1.0.*"
-          else
-            VERSION_FORMAT="1.0.*-*"
-          fi
-
-          echo "Target branch is $BASE_BRANCH. Using version format: $VERSION_FORMAT"
-
-          # Replace ProjectReference with PackageReference in all service csproj files
-          find . -name "*.csproj" -type f -exec sed -i \
-            's|<ProjectReference Include=".*Maliev.Aspire.ServiceDefaults.*.csproj" />|<PackageReference Include="Maliev.Aspire.ServiceDefaults" Version="'$VERSION_FORMAT'" />|g' \
-            {} \;
-          find . -name "*.csproj" -type f -exec sed -i \
-            's|<ProjectReference Include=".*Maliev.MessagingContracts.*.csproj" />|<PackageReference Include="Maliev.MessagingContracts" Version="'$VERSION_FORMAT'" />|g' \
-            {} \;
-          echo "Switched to PackageReference for ServiceDefaults and MessagingContracts"
-
       - name: Restore dependencies
-        run: dotnet restore Maliev.CompensationService.sln
+        run: dotnet restore Maliev.CompensationService.slnx
         env:
           NUGET_USERNAME: ${{ github.actor }}
           NUGET_PASSWORD: ${{ secrets.GITOPS_PAT }}
 
       - name: Build
-        run: dotnet build Maliev.CompensationService.sln --no-restore --configuration Release
+        run: dotnet build Maliev.CompensationService.slnx --no-restore --configuration Release
 
       - name: Test
-        run: dotnet test Maliev.CompensationService.sln --no-build --configuration Release --verbosity normal
+        run: dotnet test Maliev.CompensationService.slnx --no-build --configuration Release --verbosity normal
         working-directory: ${{ github.workspace }}
