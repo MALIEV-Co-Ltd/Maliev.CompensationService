@@ -18,28 +18,17 @@ jobs:
         with:
           dotnet-version: "10.x"
 
-      - name: Switch to PackageReference for CI build
-        run: |
-          # Replace ProjectReference with PackageReference in all service csproj files
-          find . -name "*.csproj" -type f -exec sed -i \
-            's|<ProjectReference Include=".*Maliev.Aspire.ServiceDefaults.*.csproj" />|<PackageReference Include="Maliev.Aspire.ServiceDefaults" Version="1.0.*-*" />|g' \
-            {} \;
-          find . -name "*.csproj" -type f -exec sed -i \
-            's|<ProjectReference Include=".*Maliev.MessagingContracts.*.csproj" />|<PackageReference Include="Maliev.MessagingContracts" Version="1.0.*-*" />|g' \
-            {} \;
-          echo "Switched to PackageReference for ServiceDefaults and MessagingContracts"
-
       - name: Restore dependencies
-        run: dotnet restore Maliev.CompensationService.sln
+        run: dotnet restore Maliev.CompensationService.slnx
         env:
           NUGET_USERNAME: ${{ github.actor }}
           NUGET_PASSWORD: ${{ secrets.GITOPS_PAT }}
 
       - name: Build
-        run: dotnet build Maliev.CompensationService.sln --no-restore
+        run: dotnet build Maliev.CompensationService.slnx --no-restore
 
       - name: Test
-        run: dotnet test Maliev.CompensationService.sln --no-build --verbosity normal
+        run: dotnet test Maliev.CompensationService.slnx --no-build --verbosity normal
         working-directory: ${{ github.workspace }}
 
       - name: Authenticate to Google Cloud

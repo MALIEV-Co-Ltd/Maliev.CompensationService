@@ -1,0 +1,64 @@
+name: Build and Test
+
+on:
+  workflow_call:
+    inputs:
+      solution_file:
+        required: true
+        type: string
+      configuration:
+        required: false
+        type: string
+        default: Release
+      extra_args:
+        required: false
+        type: string
+        default: ""
+    secrets:
+      gitops_pat:
+        required: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Service
+        uses: actions/checkout@v5
+        with:
+          path: service
+
+      - name: Checkout Shared Aspire Defaults
+        uses: actions/checkout@v5
+        with:
+          repository: MALIEV-Co-Ltd/Maliev.Aspire
+          ref: feat/platform-modernization
+          token: ${{ secrets.gitops_pat }}
+          path: Maliev.Aspire
+
+      - name: Checkout Shared Messaging Contracts
+        uses: actions/checkout@v5
+        with:
+          repository: MALIEV-Co-Ltd/Maliev.MessagingContracts
+          ref: feat/platform-modernization
+          token: ${{ secrets.gitops_pat }}
+          path: Maliev.MessagingContracts
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: "10.x"
+
+      - name: Restore dependencies
+        run: dotnet restore ${{ inputs.solution_file }} ${{ inputs.extra_args }}
+        working-directory: service
+        env:
+          NUGET_USERNAME: ${{ github.actor }}
+          NUGET_PASSWORD: ${{ secrets.gitops_pat }}
+
+      - name: Build
+        run: dotnet build ${{ inputs.solution_file }} --no-restore --configuration ${{ inputs.configuration }} ${{ inputs.extra_args }}
+        working-directory: service
+
+      - name: Test
+        run: dotnet test ${{ inputs.solution_file }} --no-build --configuration ${{ inputs.configuration }} --verbosity normal ${{ inputs.extra_args }}
+        working-directory: service

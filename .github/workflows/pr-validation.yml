@@ -9,47 +9,8 @@ on:
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-
-      - name: Set up .NET
-        uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: "10.x"
-
-      - name: Switch to PackageReference for CI build
-        run: |
-          # Determine version format based on target branch
-          BASE_BRANCH="${{ github.base_ref }}"
-          if [ "$BASE_BRANCH" == "main" ]; then
-            VERSION_FORMAT="1.0.*"
-          else
-            VERSION_FORMAT="1.0.*-*"
-          fi
-
-          echo "Target branch is $BASE_BRANCH. Using version format: $VERSION_FORMAT"
-
-          # Replace ProjectReference with PackageReference in all service csproj files
-          find . -name "*.csproj" -type f -exec sed -i \
-            's|<ProjectReference Include=".*Maliev.Aspire.ServiceDefaults.*.csproj" />|<PackageReference Include="Maliev.Aspire.ServiceDefaults" Version="'$VERSION_FORMAT'" />|g' \
-            {} \;
-          find . -name "*.csproj" -type f -exec sed -i \
-            's|<ProjectReference Include=".*Maliev.MessagingContracts.*.csproj" />|<PackageReference Include="Maliev.MessagingContracts" Version="'$VERSION_FORMAT'" />|g' \
-            {} \;
-          echo "Switched to PackageReference for ServiceDefaults and MessagingContracts"
-
-      - name: Restore dependencies
-        run: dotnet restore Maliev.CompensationService.sln
-        env:
-          NUGET_USERNAME: ${{ github.actor }}
-          NUGET_PASSWORD: ${{ secrets.GITOPS_PAT }}
-
-      - name: Build
-        run: dotnet build Maliev.CompensationService.sln --no-restore --configuration Release
-
-      - name: Test
-        run: dotnet test Maliev.CompensationService.sln --no-build --configuration Release --verbosity normal
-        working-directory: ${{ github.workspace }}
+    uses: ./.github/workflows/_build-and-test.yml
+    with:
+      solution_file: Maliev.CompensationService.slnx
+    secrets:
+      gitops_pat: ${{ secrets.GITOPS_PAT }}

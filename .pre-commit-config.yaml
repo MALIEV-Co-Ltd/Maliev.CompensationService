@@ -19,7 +19,14 @@ repos:
     hooks:
       - id: dotnet-format
         name: dotnet format
-        entry: dotnet format
+        entry: dotnet format Maliev.CompensationService.slnx
         language: system
         files: \.(cs|vb)$
+        pass_filenames: false
+
+      - id: verify-build
+        name: verify build
+        entry: dotnet build Maliev.CompensationService.slnx -c Release
+        language: system
+        files: \.(cs|json|csproj|slnx)$
         pass_filenames: false
