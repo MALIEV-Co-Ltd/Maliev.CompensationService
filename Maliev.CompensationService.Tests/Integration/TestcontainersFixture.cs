@@ -7,18 +7,18 @@ namespace Maliev.CompensationService.Tests.Integration;
 
 public class TestcontainersFixture : IAsyncLifetime
 {
-    public PostgreSqlContainer PostgreSqlContainer { get; } = new PostgreSqlBuilder().WithName("postgres:18")
+    public PostgreSqlContainer PostgreSqlContainer { get; } = new PostgreSqlBuilder().WithImage("postgres:18")
         .WithDatabase("compensation_test")
         .WithUsername("postgres")
         .WithPassword("postgres")
         .Build();
 
-    public RabbitMqContainer RabbitMqContainer { get; } = new RabbitMqBuilder().WithName("rabbitmq:3-management")
+    public RabbitMqContainer RabbitMqContainer { get; } = new RabbitMqBuilder().WithImage("rabbitmq:3-management")
         .WithUsername("guest")
         .WithPassword("guest")
         .Build();
 
-    public RedisContainer RedisContainer { get; } = new RedisBuilder().WithName("redis:7")
+    public RedisContainer RedisContainer { get; } = new RedisBuilder().WithImage("redis:7")
         .Build();
 
     public async Task InitializeAsync()
