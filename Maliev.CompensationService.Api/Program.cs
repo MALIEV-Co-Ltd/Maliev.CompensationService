@@ -32,7 +32,7 @@ try
     builder.AddPostgresDbContext<CompensationDbContext>(connectionName: "CompensationDbContext");
 
     // Redis
-    builder.AddRedisDistributedCache(instanceName: "compensation:");
+    builder.AddStandardCache("compensation:"); // Redis + in-memory fallback, memory-optimized
 
     // MassTransit
     builder.AddMassTransitWithRabbitMq(x =>
@@ -46,7 +46,7 @@ try
     builder.AddJwtAuthentication();
 
     // --- API Configuration ---
-    builder.AddDefaultCors();
+    builder.AddStandardCors(); // CORS with fail-fast validation
     builder.AddDefaultApiVersioning();
 
     if (!builder.Environment.IsProduction())

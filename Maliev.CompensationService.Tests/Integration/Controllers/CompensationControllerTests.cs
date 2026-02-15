@@ -20,51 +20,22 @@ using Xunit;
 namespace Maliev.CompensationService.Tests.Integration.Controllers;
 
 [Collection("Testcontainers")]
-public class CompensationControllerTests : IClassFixture<WebApplicationFactory<Program>>
+public class CompensationControllerTests : BaseIntegrationTest
 {
-    private readonly WebApplicationFactory<Program> _factory;
-    private readonly TestcontainersFixture _fixture;
-
     public CompensationControllerTests(WebApplicationFactory<Program> factory, TestcontainersFixture fixture)
+        : base(factory, fixture)
     {
-        _fixture = fixture;
-        _factory = factory.WithWebHostBuilder(builder =>
-        {
-            builder.UseEnvironment("Testing");
-
-            // Set environment variables for connection strings (read early in configuration pipeline)
-            Environment.SetEnvironmentVariable("ConnectionStrings__CompensationDbContext", _fixture.PostgreSqlContainer.GetConnectionString());
-            Environment.SetEnvironmentVariable("ConnectionStrings__redis", _fixture.RedisContainer.GetConnectionString());
-            Environment.SetEnvironmentVariable("ConnectionStrings__rabbitmq", _fixture.RabbitMqContainer.GetConnectionString());
-
-            builder.ConfigureTestServices(services =>
-            {
-                // Ensure MassTransit waits until started for tests to avoid race conditions
-                services.Configure<MassTransitHostOptions>(options =>
-                {
-                    options.WaitUntilStarted = true;
-                    options.StartTimeout = TimeSpan.FromSeconds(30);
-                });
-
-                // Add MassTransit Test Harness (overrides real MassTransit/RabbitMQ)
-                services.AddMassTransitTestHarness();
-
-                // Mock authorization
-                services.RemoveAll<IAuthorizationHandler>();
-                services.AddSingleton<IAuthorizationHandler, TestAuthHandler>();
-            });
-        });
     }
 
     [Fact]
     public async Task GetCompensationDetails_ShouldReturnOk_WhenEmployeeExists()
     {
         // Arrange
-        var client = _factory.CreateClient();
+        var client = CreateClient();
         var employeeId = Guid.Parse("088fbaf2-2d40-4aed-8c3a-5940a07352e5");
         var departmentId = Guid.NewGuid();
 
-        using (var scope = _factory.Services.CreateScope())
+        using (var scope = Factory.Services.CreateScope())
         {
             var context = scope.ServiceProvider.GetRequiredService<CompensationDbContext>();
             await context.Database.EnsureCreatedAsync();
@@ -98,10 +69,10 @@ public class CompensationControllerTests : IClassFixture<WebApplicationFactory<P
     public async Task RecordCompensationChange_ShouldReturnCreated_WhenValid()
     {
         // Arrange
-        var client = _factory.CreateClient();
+        var client = CreateClient();
         var employeeId = Guid.NewGuid();
 
-        using (var scope = _factory.Services.CreateScope())
+        using (var scope = Factory.Services.CreateScope())
         {
             var context = scope.ServiceProvider.GetRequiredService<CompensationDbContext>();
             await context.Database.EnsureCreatedAsync();
@@ -133,11 +104,11 @@ public class CompensationControllerTests : IClassFixture<WebApplicationFactory<P
     public async Task GetCompensationHistory_ShouldReturnOk()
     {
         // Arrange
-        var client = _factory.CreateClient();
+        var client = CreateClient();
         var employeeId = Guid.NewGuid();
         var compensationRecordId = Guid.NewGuid();
 
-        using (var scope = _factory.Services.CreateScope())
+        using (var scope = Factory.Services.CreateScope())
         {
             var context = scope.ServiceProvider.GetRequiredService<CompensationDbContext>();
             await context.Database.EnsureCreatedAsync();
@@ -179,10 +150,10 @@ public class CompensationControllerTests : IClassFixture<WebApplicationFactory<P
     public async Task GetBenefits_ShouldReturnOk()
     {
         // Arrange
-        var client = _factory.CreateClient();
+        var client = CreateClient();
         var employeeId = Guid.NewGuid();
 
-        using (var scope = _factory.Services.CreateScope())
+        using (var scope = Factory.Services.CreateScope())
         {
             var context = scope.ServiceProvider.GetRequiredService<CompensationDbContext>();
             await context.Database.EnsureCreatedAsync();
@@ -202,11 +173,11 @@ public class CompensationControllerTests : IClassFixture<WebApplicationFactory<P
 
     {
         // Arrange
-        var client = _factory.CreateClient();
+        var client = CreateClient();
         var employeeId = Guid.NewGuid();
 
         // 1. Create initial record
-        using (var scope = _factory.Services.CreateScope())
+        using (var scope = Factory.Services.CreateScope())
         {
             var context = scope.ServiceProvider.GetRequiredService<CompensationDbContext>();
             await context.Database.EnsureCreatedAsync();

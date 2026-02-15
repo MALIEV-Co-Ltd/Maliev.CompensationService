@@ -21,46 +21,21 @@ using Xunit;
 namespace Maliev.CompensationService.Tests.Integration.Controllers;
 
 [Collection("Testcontainers")]
-public class BulkOperationsControllerTests : IClassFixture<WebApplicationFactory<Program>>
+public class BulkOperationsControllerTests : BaseIntegrationTest
 {
-    private readonly WebApplicationFactory<Program> _factory;
-    private readonly TestcontainersFixture _fixture;
-
     public BulkOperationsControllerTests(WebApplicationFactory<Program> factory, TestcontainersFixture fixture)
+        : base(factory, fixture)
     {
-        _fixture = fixture;
-        _factory = factory.WithWebHostBuilder(builder =>
-        {
-            builder.UseEnvironment("Testing");
-
-            Environment.SetEnvironmentVariable("ConnectionStrings__CompensationDbContext", _fixture.PostgreSqlContainer.GetConnectionString());
-            Environment.SetEnvironmentVariable("ConnectionStrings__redis", _fixture.RedisContainer.GetConnectionString());
-            Environment.SetEnvironmentVariable("ConnectionStrings__rabbitmq", _fixture.RabbitMqContainer.GetConnectionString());
-
-            builder.ConfigureTestServices(services =>
-            {
-                services.Configure<MassTransitHostOptions>(options =>
-                {
-                    options.WaitUntilStarted = true;
-                    options.StartTimeout = TimeSpan.FromSeconds(30);
-                });
-
-                services.AddMassTransitTestHarness();
-
-                services.RemoveAll<IAuthorizationHandler>();
-                services.AddSingleton<IAuthorizationHandler, TestAuthHandler>();
-            });
-        });
     }
 
     [Fact]
     public async Task BulkSalaryIncrease_Preview_ShouldReturnAccepted()
     {
         // Arrange
-        var client = _factory.CreateClient();
+        var client = CreateClient();
         var departmentId = Guid.NewGuid();
 
-        using (var scope = _factory.Services.CreateScope())
+        using (var scope = Factory.Services.CreateScope())
         {
             var context = scope.ServiceProvider.GetRequiredService<CompensationDbContext>();
             await context.Database.EnsureCreatedAsync();
@@ -104,10 +79,10 @@ public class BulkOperationsControllerTests : IClassFixture<WebApplicationFactory
     public async Task BulkSalaryIncrease_Real_ShouldReturnAccepted()
     {
         // Arrange
-        var client = _factory.CreateClient();
+        var client = CreateClient();
         var departmentId = Guid.NewGuid();
 
-        using (var scope = _factory.Services.CreateScope())
+        using (var scope = Factory.Services.CreateScope())
         {
             var context = scope.ServiceProvider.GetRequiredService<CompensationDbContext>();
             await context.Database.EnsureCreatedAsync();
@@ -148,10 +123,10 @@ public class BulkOperationsControllerTests : IClassFixture<WebApplicationFactory
     public async Task GetBulkJobStatus_ShouldReturnOk_WhenJobExists()
     {
         // Arrange
-        var client = _factory.CreateClient();
+        var client = CreateClient();
         var jobId = Guid.NewGuid();
 
-        using (var scope = _factory.Services.CreateScope())
+        using (var scope = Factory.Services.CreateScope())
         {
             var context = scope.ServiceProvider.GetRequiredService<CompensationDbContext>();
             await context.Database.EnsureCreatedAsync();

@@ -19,50 +19,22 @@ using Xunit;
 namespace Maliev.CompensationService.Tests.Integration.Controllers;
 
 [Collection("Testcontainers")]
-public class BenefitsControllerTests : IClassFixture<WebApplicationFactory<Program>>
+public class BenefitsControllerTests : BaseIntegrationTest
 {
-    private readonly WebApplicationFactory<Program> _factory;
-    private readonly TestcontainersFixture _fixture;
-
     public BenefitsControllerTests(WebApplicationFactory<Program> factory, TestcontainersFixture fixture)
+        : base(factory, fixture)
     {
-        _fixture = fixture;
-        _factory = factory.WithWebHostBuilder(builder =>
-        {
-            builder.UseEnvironment("Testing");
-
-            // Set environment variables for connection strings (read early in configuration pipeline)
-            Environment.SetEnvironmentVariable("ConnectionStrings__CompensationDbContext", _fixture.PostgreSqlContainer.GetConnectionString());
-            Environment.SetEnvironmentVariable("ConnectionStrings__redis", _fixture.RedisContainer.GetConnectionString());
-            Environment.SetEnvironmentVariable("ConnectionStrings__rabbitmq", _fixture.RabbitMqContainer.GetConnectionString());
-
-            builder.ConfigureTestServices(services =>
-            {
-                // Ensure MassTransit waits until started for tests to avoid race conditions
-                services.Configure<MassTransitHostOptions>(options =>
-                {
-                    options.WaitUntilStarted = true;
-                    options.StartTimeout = TimeSpan.FromSeconds(30);
-                });
-
-                // Add MassTransit Test Harness (overrides real MassTransit/RabbitMQ)
-                services.AddMassTransitTestHarness();
-
-                services.RemoveAll<IAuthorizationHandler>();
-                services.AddSingleton<IAuthorizationHandler, TestAuthHandler>();
-            });
-        });
     }
 
     [Fact]
     public async Task EnrollInBenefit_ShouldReturnCreated()
     {
         // Arrange
-        var client = _factory.CreateClient();
+        var client = CreateClient();
         var employeeId = Guid.NewGuid();
         Guid benefitId;
 
-        using (var scope = _factory.Services.CreateScope())
+        using (var scope = Factory.Services.CreateScope())
         {
             var context = scope.ServiceProvider.GetRequiredService<CompensationDbContext>();
             await context.Database.EnsureCreatedAsync();
@@ -100,9 +72,9 @@ public class BenefitsControllerTests : IClassFixture<WebApplicationFactory<Progr
     public async Task GetAvailableBenefits_ShouldReturnOk()
     {
         // Arrange
-        var client = _factory.CreateClient();
+        var client = CreateClient();
 
-        using (var scope = _factory.Services.CreateScope())
+        using (var scope = Factory.Services.CreateScope())
         {
             var context = scope.ServiceProvider.GetRequiredService<CompensationDbContext>();
             await context.Database.EnsureCreatedAsync();
@@ -127,11 +99,11 @@ public class BenefitsControllerTests : IClassFixture<WebApplicationFactory<Progr
     public async Task AddDependent_ShouldReturnOk()
     {
         // Arrange
-        var client = _factory.CreateClient();
+        var client = CreateClient();
         var employeeId = Guid.NewGuid();
         Guid benefitId;
 
-        using (var scope = _factory.Services.CreateScope())
+        using (var scope = Factory.Services.CreateScope())
         {
             var context = scope.ServiceProvider.GetRequiredService<CompensationDbContext>();
             await context.Database.EnsureCreatedAsync();
@@ -178,11 +150,11 @@ public class BenefitsControllerTests : IClassFixture<WebApplicationFactory<Progr
     public async Task UpdateBenefitsEnrollment_ShouldReturnOk()
     {
         // Arrange
-        var client = _factory.CreateClient();
+        var client = CreateClient();
         var employeeId = Guid.NewGuid();
         Guid enrollmentId;
 
-        using (var scope = _factory.Services.CreateScope())
+        using (var scope = Factory.Services.CreateScope())
         {
             var context = scope.ServiceProvider.GetRequiredService<CompensationDbContext>();
             await context.Database.EnsureCreatedAsync();
@@ -224,11 +196,11 @@ public class BenefitsControllerTests : IClassFixture<WebApplicationFactory<Progr
     public async Task TerminateBenefit_ShouldReturnNoContent()
     {
         // Arrange
-        var client = _factory.CreateClient();
+        var client = CreateClient();
         var employeeId = Guid.NewGuid();
         Guid enrollmentId;
 
-        using (var scope = _factory.Services.CreateScope())
+        using (var scope = Factory.Services.CreateScope())
         {
             var context = scope.ServiceProvider.GetRequiredService<CompensationDbContext>();
             await context.Database.EnsureCreatedAsync();

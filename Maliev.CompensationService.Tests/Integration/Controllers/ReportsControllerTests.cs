@@ -15,45 +15,21 @@ using Xunit;
 namespace Maliev.CompensationService.Tests.Integration.Controllers;
 
 [Collection("Testcontainers")]
-public class ReportsControllerTests : IClassFixture<WebApplicationFactory<Program>>
+public class ReportsControllerTests : BaseIntegrationTest
 {
-    private readonly WebApplicationFactory<Program> _factory;
-    private readonly TestcontainersFixture _fixture;
-
     public ReportsControllerTests(WebApplicationFactory<Program> factory, TestcontainersFixture fixture)
+        : base(factory, fixture)
     {
-        _fixture = fixture;
-        _factory = factory.WithWebHostBuilder(builder =>
-        {
-            builder.UseEnvironment("Testing");
-
-            Environment.SetEnvironmentVariable("ConnectionStrings__CompensationDbContext", _fixture.PostgreSqlContainer.GetConnectionString());
-            Environment.SetEnvironmentVariable("ConnectionStrings__redis", _fixture.RedisContainer.GetConnectionString());
-            Environment.SetEnvironmentVariable("ConnectionStrings__rabbitmq", _fixture.RabbitMqContainer.GetConnectionString());
-
-            builder.ConfigureTestServices(services =>
-            {
-                services.Configure<MassTransitHostOptions>(options =>
-                {
-                    options.WaitUntilStarted = true;
-                });
-
-                services.AddMassTransitTestHarness();
-
-                services.RemoveAll<IAuthorizationHandler>();
-                services.AddSingleton<IAuthorizationHandler, TestAuthHandler>();
-            });
-        });
     }
 
     [Fact]
     public async Task GetCompensationAnalysis_ShouldReturnOk()
     {
         // Arrange
-        var client = _factory.CreateClient();
+        var client = CreateClient();
         var departmentId = Guid.NewGuid();
 
-        using (var scope = _factory.Services.CreateScope())
+        using (var scope = Factory.Services.CreateScope())
         {
             var context = scope.ServiceProvider.GetRequiredService<CompensationDbContext>();
             await context.Database.EnsureCreatedAsync();
@@ -87,9 +63,9 @@ public class ReportsControllerTests : IClassFixture<WebApplicationFactory<Progra
     public async Task GetCompensationBudget_ShouldReturnOk()
     {
         // Arrange
-        var client = _factory.CreateClient();
+        var client = CreateClient();
 
-        using (var scope = _factory.Services.CreateScope())
+        using (var scope = Factory.Services.CreateScope())
         {
             var context = scope.ServiceProvider.GetRequiredService<CompensationDbContext>();
             await context.Database.EnsureCreatedAsync();
