@@ -16,9 +16,9 @@ jobs:
       - id: set-version
         run: |
           BASE_BRANCH="${{ github.base_ref }}"
-          if [ "$BASE_BRANCH" == "main" ]; then
+          if ["$BASE_BRANCH" == "main"]; then
             VERSION_FORMAT="1.0.*"
-          elif [ "$BASE_BRANCH" == "staging" ]; then
+          elif ["$BASE_BRANCH" == "staging"]; then
             VERSION_FORMAT="1.0.*-beta*"
           else
             VERSION_FORMAT="1.0.*-alpha*"
