@@ -27,22 +27,6 @@ jobs:
         with:
           path: service
 
-      - name: Checkout Shared Aspire Defaults
-        uses: actions/checkout@v5
-        with:
-          repository: MALIEV-Co-Ltd/Maliev.Aspire
-          ref: feat/platform-modernization
-          token: ${{ secrets.gitops_pat }}
-          path: Maliev.Aspire
-
-      - name: Checkout Shared Messaging Contracts
-        uses: actions/checkout@v5
-        with:
-          repository: MALIEV-Co-Ltd/Maliev.MessagingContracts
-          ref: feat/platform-modernization
-          token: ${{ secrets.gitops_pat }}
-          path: Maliev.MessagingContracts
-
       - name: Set up .NET
         uses: actions/setup-dotnet@v5
         with:
