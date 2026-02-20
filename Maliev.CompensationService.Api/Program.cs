@@ -81,7 +81,7 @@ try
     // Register Handlers
     var queryAssembly = typeof(GetCompensationDetailsQueryHandler).Assembly;
     var commandAssembly = typeof(Maliev.CompensationService.Application.Commands.Handlers.EnrollInBenefitCommandHandler).Assembly;
-    
+
     var assemblies = new[] { queryAssembly, commandAssembly };
     var handlerTypes = assemblies.SelectMany(a => a.GetTypes())
         .Where(t => !t.IsAbstract && !t.IsInterface)

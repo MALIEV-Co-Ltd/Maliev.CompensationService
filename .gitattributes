@@ -1,0 +1,3 @@
+# Force LF for YAML files (yamllint requires Unix line endings)
+*.yaml text eol=lf
+*.yml text eol=lf
