@@ -2,6 +2,7 @@ using Maliev.CompensationService.Application.Common.Mediator;
 using Maliev.CompensationService.Application.Interfaces;
 using Maliev.CompensationService.Domain.Enums;
 using Maliev.MessagingContracts.Generated;
+using Maliev.MessagingContracts.Contracts.Compensation;
 using MassTransit;
 
 namespace Maliev.CompensationService.Application.Commands.Handlers;

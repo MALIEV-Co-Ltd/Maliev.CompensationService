@@ -5,6 +5,7 @@ using Maliev.CompensationService.Application.Mappers;
 using Maliev.CompensationService.Domain.Entities;
 using Maliev.CompensationService.Domain.Enums;
 using Maliev.MessagingContracts.Generated;
+using Maliev.MessagingContracts.Contracts.Compensation;
 using MassTransit;
 
 namespace Maliev.CompensationService.Application.Commands.Handlers;
