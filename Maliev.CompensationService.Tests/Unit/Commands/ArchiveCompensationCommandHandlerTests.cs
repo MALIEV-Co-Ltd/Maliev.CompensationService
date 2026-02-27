@@ -2,7 +2,7 @@ using Maliev.CompensationService.Application.Commands;
 using Maliev.CompensationService.Application.Commands.Handlers;
 using Maliev.CompensationService.Application.Interfaces;
 using Maliev.CompensationService.Domain.Entities;
-using Maliev.MessagingContracts.Generated;
+using Maliev.MessagingContracts;
 using Maliev.MessagingContracts.Contracts.Compensation;
 using MassTransit;
 using Microsoft.Extensions.Logging;

@@ -4,7 +4,7 @@ using Maliev.CompensationService.Application.DTOs;
 using Maliev.CompensationService.Application.Interfaces;
 using Maliev.CompensationService.Domain.Entities;
 using Maliev.CompensationService.Domain.Enums;
-using Maliev.MessagingContracts.Generated;
+using Maliev.MessagingContracts;
 using Maliev.MessagingContracts.Contracts.Compensation;
 using MassTransit;
 using Moq;
