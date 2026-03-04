@@ -287,7 +287,7 @@ namespace Maliev.CompensationService.Infrastructure.Migrations
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("xid")
-                        .HasColumnName("row_version");
+                        .HasColumnName("xmin");
 
                     b.HasKey("Id");
 

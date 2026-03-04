@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Maliev.CompensationService.Infrastructure.Migrations
 {
     [DbContext(typeof(CompensationDbContext))]
-    [Migration("20260304103123_InitialCreate")]
+    [Migration("20260304105130_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -290,7 +290,7 @@ namespace Maliev.CompensationService.Infrastructure.Migrations
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("xid")
-                        .HasColumnName("row_version");
+                        .HasColumnName("xmin");
 
                     b.HasKey("Id");
 

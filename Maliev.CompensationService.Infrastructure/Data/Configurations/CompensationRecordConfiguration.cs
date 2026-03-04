@@ -71,7 +71,6 @@ public class CompensationRecordConfiguration : IEntityTypeConfiguration<Compensa
             .HasColumnName("modified_date");
 
         builder.Property(e => e.RowVersion)
-            .HasColumnName("row_version")
             .IsRowVersion();
 
         builder.HasIndex(e => e.EmployeeId)
