@@ -1,3 +1,4 @@
+﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
@@ -69,7 +70,7 @@ namespace Maliev.CompensationService.Infrastructure.Migrations
                     is_current = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
                     created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     modified_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false)
+                    row_version = table.Column<uint>(type: "xid", rowVersion: true, nullable: false)
                 },
                 constraints: table =>
                 {
