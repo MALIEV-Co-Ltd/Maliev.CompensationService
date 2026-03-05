@@ -78,11 +78,6 @@ public class CompensationRecord
     public DateTime? ModifiedDate { get; set; }
 
     /// <summary>
-    /// Row version for optimistic concurrency control
-    /// </summary>
-    public uint RowVersion { get; set; }
-
-    /// <summary>
     /// Historical changes associated with this compensation record
     /// </summary>
     public ICollection<SalaryHistory> SalaryHistories { get; set; } = new List<SalaryHistory>();

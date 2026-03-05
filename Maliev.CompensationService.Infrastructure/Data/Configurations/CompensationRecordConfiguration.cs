@@ -70,7 +70,8 @@ public class CompensationRecordConfiguration : IEntityTypeConfiguration<Compensa
         builder.Property(e => e.ModifiedDate)
             .HasColumnName("modified_date");
 
-        builder.Property(e => e.RowVersion)
+        builder.Property<uint>("xmin")
+            .HasColumnType("xid")
             .IsRowVersion();
 
         builder.HasIndex(e => e.EmployeeId)

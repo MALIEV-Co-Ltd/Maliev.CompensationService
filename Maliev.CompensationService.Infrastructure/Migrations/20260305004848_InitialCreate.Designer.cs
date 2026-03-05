@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Maliev.CompensationService.Infrastructure.Migrations
 {
     [DbContext(typeof(CompensationDbContext))]
-    [Migration("20260304105130_InitialCreate")]
+    [Migration("20260305004848_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -286,7 +286,7 @@ namespace Maliev.CompensationService.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("modified_date");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<uint>("xmin")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("xid")

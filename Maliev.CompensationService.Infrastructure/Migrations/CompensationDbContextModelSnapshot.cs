@@ -283,7 +283,7 @@ namespace Maliev.CompensationService.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("modified_date");
 
-                    b.Property<uint>("RowVersion")
+                    b.Property<uint>("xmin")
                         .IsConcurrencyToken()
                         .ValueGeneratedOnAddOrUpdate()
                         .HasColumnType("xid")
