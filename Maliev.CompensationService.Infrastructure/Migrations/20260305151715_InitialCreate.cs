@@ -69,8 +69,7 @@ namespace Maliev.CompensationService.Infrastructure.Migrations
                     approved_by = table.Column<Guid>(type: "uuid", nullable: true),
                     is_current = table.Column<bool>(type: "boolean", nullable: false, defaultValue: true),
                     created_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    modified_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
-                    xmin = table.Column<uint>(type: "xid", rowVersion: true, nullable: false)
+                    modified_date = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {

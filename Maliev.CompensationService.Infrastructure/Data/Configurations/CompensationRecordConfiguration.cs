@@ -72,7 +72,8 @@ public class CompensationRecordConfiguration : IEntityTypeConfiguration<Compensa
 
         builder.Property<uint>("xmin")
             .HasColumnType("xid")
-            .IsRowVersion();
+            .ValueGeneratedOnAddOrUpdate()
+            .IsConcurrencyToken();
 
         builder.HasIndex(e => e.EmployeeId)
             .HasDatabaseName("idx_comp_records_employee");
