@@ -66,9 +66,10 @@ public class CompensationRepository : ICompensationRepository
     }
 
     /// <inheritdoc/>
-    public async Task<Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
+    public async Task<ITransaction> BeginTransactionAsync(CancellationToken cancellationToken = default)
     {
-        return await _context.Database.BeginTransactionAsync(cancellationToken);
+        var transaction = await _context.Database.BeginTransactionAsync(cancellationToken);
+        return new EfTransactionAdapter(transaction);
     }
 
     /// <inheritdoc/>
@@ -77,16 +78,16 @@ public class CompensationRepository : ICompensationRepository
         var strategy = _context.Database.CreateExecutionStrategy();
         return await strategy.ExecuteAsync(async ct =>
         {
-            await using var transaction = await _context.Database.BeginTransactionAsync(ct);
+            await using var adapter = new EfTransactionAdapter(await _context.Database.BeginTransactionAsync(ct));
             try
             {
                 var result = await action(ct);
-                await transaction.CommitAsync(ct);
+                await adapter.CommitAsync(ct);
                 return result;
             }
             catch
             {
-                await transaction.RollbackAsync(ct);
+                await adapter.RollbackAsync(ct);
                 throw;
             }
         }, cancellationToken);

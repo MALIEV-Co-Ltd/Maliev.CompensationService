@@ -1,5 +1,4 @@
 using Maliev.CompensationService.Domain.Entities;
-using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Maliev.CompensationService.Application.Interfaces;
 
@@ -51,7 +50,7 @@ public interface ICompensationRepository
     /// </summary>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>A task that represents the asynchronous transaction operation</returns>
-    Task<IDbContextTransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
+    Task<ITransaction> BeginTransactionAsync(CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Executes an action within a transaction using the configured execution strategy.
