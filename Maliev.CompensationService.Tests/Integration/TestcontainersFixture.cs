@@ -7,7 +7,9 @@ namespace Maliev.CompensationService.Tests.Integration;
 
 public class TestcontainersFixture : IAsyncLifetime
 {
-    public PostgreSqlContainer PostgreSqlContainer { get; } = new PostgreSqlBuilder().WithImage("postgres:18")
+    public PostgreSqlContainer PostgreSqlContainer { get; } = 
+                #pragma warning disable CS0618
+        new PostgreSqlBuilder().WithImage("postgres:18")
         .WithDatabase("compensation_test")
         .WithUsername("postgres")
         .WithPassword("postgres")
@@ -20,6 +22,7 @@ public class TestcontainersFixture : IAsyncLifetime
 
     public RedisContainer RedisContainer { get; } = new RedisBuilder().WithImage("redis:7")
         .Build();
+#pragma warning restore CS0618
 
     public async Task InitializeAsync()
     {
@@ -44,3 +47,6 @@ public class TestcontainersFixture : IAsyncLifetime
 public class TestcontainersCollection : ICollectionFixture<TestcontainersFixture>
 {
 }
+
+
+
