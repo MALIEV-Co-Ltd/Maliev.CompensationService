@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Maliev.Aspire.ServiceDefaults.Authorization;
 using Maliev.CompensationService.Application.Commands;
 using Maliev.CompensationService.Application.Common.Mediator;
@@ -12,7 +13,8 @@ namespace Maliev.CompensationService.Api.Controllers;
 /// Controller for managing benefit enrollments
 /// </summary>
 [ApiController]
-[Route("compensation/v1/employees")]
+[ApiVersion("1.0")]
+[Route("compensation/v{version:apiVersion}/employees")]
 public class BenefitsController : BaseController
 {
     private readonly IMediator _mediator;
@@ -31,7 +33,7 @@ public class BenefitsController : BaseController
     /// </summary>
     /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>A collection of available benefits</returns>
-    [HttpGet("/compensation/v1/benefits")]
+    [HttpGet("/compensation/v{version:apiVersion}/benefits")]
     [RequirePermission(CompensationPermissions.Read)]
     public async Task<ActionResult<IEnumerable<BenefitDto>>> GetAvailableBenefits(CancellationToken cancellationToken)
     {

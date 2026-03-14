@@ -2,21 +2,21 @@ namespace Maliev.CompensationService.Domain.Authorization;
 
 /// <summary>
 /// Constants for Compensation Service permissions.
-/// Follows GCP-style naming: {service}.{resource}.{action}
+/// Follows GCP-style naming: {service}.{plural-resource}.{action}
 /// </summary>
 public static class CompensationPermissions
 {
     /// <summary>Permission to read compensation data.</summary>
-    public const string Read = "compensation.compensation.read";
+    public const string Read = "compensation.compensations.read";
 
     /// <summary>Permission to read sensitive compensation data (salary, personal IDs).</summary>
-    public const string ReadSensitive = "compensation.compensation.read-sensitive";
+    public const string ReadSensitive = "compensation.compensations.read-sensitive";
 
     /// <summary>Permission to update compensation data.</summary>
-    public const string Update = "compensation.compensation.update";
+    public const string Update = "compensation.compensations.update";
 
     /// <summary>Permission for administrative operations.</summary>
-    public const string Admin = "compensation.admin.manage";
+    public const string Admin = "compensation.compensations.manage";
 
     /// <summary>Permission to view reports.</summary>
     public const string Reports = "compensation.reports.view";

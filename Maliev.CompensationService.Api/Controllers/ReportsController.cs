@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Maliev.Aspire.ServiceDefaults.Authorization;
 using Maliev.CompensationService.Application.Common.Mediator;
 using Maliev.CompensationService.Application.DTOs;
@@ -11,7 +12,8 @@ namespace Maliev.CompensationService.Api.Controllers;
 /// Controller for generating compensation and budget reports
 /// </summary>
 [ApiController]
-[Route("compensation/v1/reports")]
+[ApiVersion("1.0")]
+[Route("compensation/v{version:apiVersion}/reports")]
 public class ReportsController : BaseController
 {
     private readonly IMediator _mediator;

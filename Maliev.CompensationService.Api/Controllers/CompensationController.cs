@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Maliev.Aspire.ServiceDefaults.Authorization;
 using Maliev.CompensationService.Application.Commands;
 using Maliev.CompensationService.Application.Common.Mediator;
@@ -13,7 +14,8 @@ namespace Maliev.CompensationService.Api.Controllers;
 /// Controller for managing employee compensation records, history, and benefits.
 /// </summary>
 [ApiController]
-[Route("compensation/v1/employees")]
+[ApiVersion("1.0")]
+[Route("compensation/v{version:apiVersion}/employees")]
 public class CompensationController : BaseController
 {
     private readonly IMediator _mediator;

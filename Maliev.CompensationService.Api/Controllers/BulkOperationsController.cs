@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using Maliev.Aspire.ServiceDefaults.Authorization;
 using Maliev.CompensationService.Application.Commands;
 using Maliev.CompensationService.Application.Common.Mediator;
@@ -12,7 +13,8 @@ namespace Maliev.CompensationService.Api.Controllers;
 /// Controller for managing asynchronous bulk operations
 /// </summary>
 [ApiController]
-[Route("compensation/v1/bulk")]
+[ApiVersion("1.0")]
+[Route("compensation/v{version:apiVersion}/bulk")]
 public class BulkOperationsController : BaseController
 {
     private readonly IMediator _mediator;
