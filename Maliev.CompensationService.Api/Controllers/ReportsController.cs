@@ -12,7 +12,7 @@ namespace Maliev.CompensationService.Api.Controllers;
 /// Controller for generating compensation and budget reports
 /// </summary>
 [ApiController]
-[ApiVersion("1.0")]
+[ApiVersion("1")]
 [Route("compensation/v{version:apiVersion}/reports")]
 public class ReportsController : BaseController
 {

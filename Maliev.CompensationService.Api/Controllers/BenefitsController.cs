@@ -13,7 +13,7 @@ namespace Maliev.CompensationService.Api.Controllers;
 /// Controller for managing benefit enrollments
 /// </summary>
 [ApiController]
-[ApiVersion("1.0")]
+[ApiVersion("1")]
 [Route("compensation/v{version:apiVersion}/employees")]
 public class BenefitsController : BaseController
 {
