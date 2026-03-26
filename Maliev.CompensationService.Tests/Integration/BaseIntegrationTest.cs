@@ -107,7 +107,7 @@ public abstract class BaseIntegrationTest : IClassFixture<WebApplicationFactory<
 
         foreach (var permission in permissions)
         {
-            claims.Add(new Claim("permissions", permission));
+            claims.Add(new Claim("permission", permission));
         }
 
         var signingCredentials = new SigningCredentials(
