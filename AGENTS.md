@@ -13,54 +13,69 @@ This document defines the protocols, code style, and operational workflows for A
 
 ## 2. Build, Test, and Lint Commands
 
-Agents must verify all changes using these commands.
+All commands run from within this service directory (`B:\maliev\Maliev.CompensationService`).
 
-### Build
-```bash
-dotnet build B:\maliev\Maliev.CompensationService\Maliev.CompensationService.slnx
-```
+```powershell
+# Build (treats warnings as errors — all must be fixed)
+dotnet build Maliev.CompensationService.slnx
 
-### Run All Tests
-```bash
-dotnet test B:\maliev\Maliev.CompensationService\Maliev.CompensationService.slnx
-```
+# Run all tests
+dotnet test Maliev.CompensationService.slnx --verbosity normal
 
-### Run a Single Test
-To run a specific test method, use the `--filter` option with the fully qualified name:
-```bash
-dotnet test --filter "FullyQualifiedName~Maliev.CompensationService.Tests.Integration.Controllers.CompensationControllerTests.GetCompensationDetails_ShouldReturnOk_WhenEmployeeExists"
-```
-*Note: Use `~` for "contains" matching if the full name is complex.*
+# Run a single test method
+dotnet test --filter "FullyQualifiedName~CompensationControllerTests.GetCompensationDetails_ShouldReturnOk_WhenEmployeeExists"
 
-### Formatting & Linting
-If `dotnet format` is available/configured:
-```bash
-dotnet format B:\maliev\Maliev.CompensationService\Maliev.CompensationService.slnx
+# Run all tests in a class
+dotnet test --filter "FullyQualifiedName~CompensationControllerTests"
+
+# Run with code coverage
+dotnet test Maliev.CompensationService.slnx --collect:"XPlat Code Coverage"
+
+# Format check
+dotnet format Maliev.CompensationService.slnx
+
+# EF Core migrations (Infrastructure project only)
+dotnet ef migrations add <Name> --project Maliev.CompensationService.Infrastructure --startup-project Maliev.CompensationService.Infrastructure
 ```
-Otherwise, ensure adherence to standard .NET conventions manually.
 
 ## 3. Code Style & Conventions
 
-### General
-- **Namespaces:** Use file-scoped namespaces (e.g., `namespace Maliev.CompensationService.Domain.Entities;`).
-- **Indentation:** 4 spaces.
-- **Braces:** Allman style (braces on new lines).
-- **Comments:** Provide XML documentation (`///`) for all public classes, interfaces, and methods.
+### Workspace Structure
+```
+Maliev.CompensationService/
+├── Maliev.CompensationService.Api/           # Controllers, Consumers, Middleware
+├── Maliev.CompensationService.Application/   # Use cases, DTOs, Interfaces, Handlers
+├── Maliev.CompensationService.Domain/        # Entities, value objects, domain interfaces
+├── Maliev.CompensationService.Infrastructure/ # EF Core DbContext, repositories, HTTP clients
+├── Maliev.CompensationService.Tests/         # Unit + Integration tests (xUnit)
+├── Directory.Build.props                     # Central package versioning
+└── Maliev.CompensationService.slnx          # Solution file (.slnx preferred over .sln)
+```
 
-### Naming
-- **Classes/Methods/Properties:** PascalCase (e.g., `CompensationRecord`, `CalculateTotal`).
-- **Parameters/Locals:** camelCase (e.g., `employeeId`, `baseSalary`).
-- **Private Fields:** camelCase with underscore prefix (e.g., `_repository`, `_logger`).
-- **Interfaces:** Prefix with 'I' (e.g., `ICompensationRepository`).
-- **Async Methods:** Suffix with 'Async' (e.g., `GetByEmployeeIdAsync`).
+### C# Naming & Formatting
+- **Namespaces**: File-scoped (`namespace Maliev.CompensationService.Domain.Entities;`)
+- **Classes/Methods/Properties**: `PascalCase`
+- **Private fields**: `_camelCase` (underscore prefix)
+- **Parameters/locals**: `camelCase`
+- **Async methods**: Suffix with `Async` (e.g., `GetByEmployeeIdAsync`)
+- **Interfaces**: Prefix with `I` (e.g., `ICompensationRepository`)
+- **Permissions**: GCP-style `{domain}.{plural-resource}.{action}` as `public const string` in a `Permissions` static class
+  - Valid: `compensation.compensations.create`, `compensation.salaries.update`
+  - Invalid: `compensation.compensation.create` (singular), `compensation.create` (missing resource)
+- **XML docs**: Required on ALL public methods and properties
+- **Nullable**: Enabled (`<Nullable>enable</Nullable>`). Use `?` explicitly
+- **Imports**: System first, then third-party, then local. Alphabetize within groups. Remove unused `using`
+- **Braces**: Allman style (new line) for methods and control structures. Expression-bodied for properties/accessors
+- **Indentation**: 4 spaces, LF line endings, UTF-8, trim trailing whitespace
 
-### Dependencies & Imports
-- **Usings:** Place `using` directives at the very top of the file. Remove unused directives.
-- **Injection:** Use Constructor Injection. Assign to `readonly` private fields.
-
-### Error Handling
-- Use exceptions for exceptional flow, but prefer Result/Option patterns if established in `Common`.
-- In Application layer, handle domain validation errors and return appropriate responses or exceptions caught by middleware.
+### C# Patterns
+- **DI**: Constructor injection with `private readonly` fields
+- **Controllers**: `[ApiController]`, `[ApiVersion("1")]`, `[Route("compensation/v{version:apiVersion}")]`
+- **Logging**: `ILogger<T>` with structured placeholders (never interpolate): `_logger.LogInformation("Processing {EmployeeId}", employeeId)`
+- **Error handling**: Global exception middleware. Return `ProblemDetails` / `ErrorResponse` DTOs. Never expose stack traces
+- **JSON**: Snake_case_lower for Auth service (`JsonNamingPolicy.SnakeCaseLower`); other services may vary — check existing conventions
+- **Manual mapping**: Static extension methods (`ToDto()`, `ToEntity()`). AutoMapper is banned
+- **Validation**: `System.ComponentModel.DataAnnotations` on DTOs. FluentValidation is banned
 
 ## 4. Architectural Patterns
 
@@ -73,19 +88,33 @@ Otherwise, ensure adherence to standard .NET conventions manually.
 ### CQRS (MediatR)
 - **Commands:** Mutate state. Return DTOs or Unit.
 - **Queries:** Read state. Return DTOs.
-- **Handlers:** Implement `IRequestHandler<TRequest, TResponse>`. keep logic focused on orchestration; delegate business rules to Domain.
+- **Handlers:** Implement `IRequestHandler<TRequest, TResponse>`. Keep logic focused on orchestration; delegate business rules to Domain.
 
 ### Data Access
 - **Repositories:** Define interfaces in `Application`, implement in `Infrastructure`.
 - **EF Core:** Use `IEntityTypeConfiguration<T>` for fluent API mapping in `Infrastructure/Data/Configurations`.
 - **Transactions:** Use `ExecuteInTransactionAsync` for write operations involving multiple steps.
 
+---
+
+## Banned Libraries (Build Will Fail)
+
+| Banned | Use Instead |
+|--------|-------------|
+| AutoMapper | Manual mapping extensions |
+| FluentValidation | DataAnnotations or manual validation |
+| FluentAssertions | Standard xUnit `Assert.*` |
+| Swashbuckle/Swagger | Scalar (at `/compensation/scalar`) |
+| InMemoryDatabase (EF Core) | Testcontainers with real PostgreSQL |
+
+---
+
 ## 5. Testing Guidelines
 
 ### Unit Tests (`Maliev.CompensationService.Tests/Unit`)
 - Isolate the System Under Test (SUT).
 - Use `Moq` for dependencies.
-- Naming: `MethodName_ShouldExpectedResult_WhenCondition`.
+- Naming: `MethodName_StateUnderTest_ExpectedBehavior`.
 
 ### Integration Tests (`Maliev.CompensationService.Tests/Integration`)
 - **Infrastructure:** Tests require Docker. The project uses `Testcontainers` which spins up real Postgres/RabbitMQ instances.
@@ -105,10 +134,13 @@ This service's tests cover **Tier 1 (Unit)** and **Tier 2 (Service Integration)*
 **Tier 3 (System Integration)** — cross-service workflows and event chains — is tested in `Maliev.Aspire.Tests/`.
 
 #### Key Rules
-- Use `BaseIntegrationTestFactory<TProgram, TDbContext>` for integration tests (real Testcontainers, never InMemoryDatabase)
-- Every MassTransit consumer MUST have a consumer test using `services.AddMassTransitTestHarness()`
-- Test naming: `MethodName_StateUnderTest_ExpectedBehavior`
-- Minimum 80% code coverage
+- **Framework**: xUnit with standard `Assert` (`Assert.Equal`, `Assert.NotNull`, etc.)
+- **Naming**: `MethodName_StateUnderTest_ExpectedBehavior` or `HTTP_METHOD_Path_Scenario_ExpectedStatus`
+- **Coverage**: Minimum 80% per service
+- **Integration tests**: `BaseIntegrationTestFactory<TProgram, TDbContext>` with Testcontainers (PostgreSQL, Redis, RabbitMQ). Never InMemoryDatabase
+- **System tests** (Tier 3): `AspireTestFixture` with `[Collection("AspireDomainTests")]` — shared AppHost, never one per class
+- **Eventual consistency**: Use `TestHelpers.WaitForAsync`. Never `Task.Delay`
+- **MassTransit consumers**: Must have consumer tests using `AddMassTransitTestHarness()`
 - Use `[Fact]` for single cases, `[Theory]` for parameterized tests
 
 > Full ecosystem test strategy: `Maliev.Aspire.Tests/TEST_PLAN.md`
@@ -122,31 +154,28 @@ This service's tests cover **Tier 1 (Unit)** and **Tier 2 (Service Integration)*
 5.  **Paths:** Always use absolute paths for file operations.
 
 ---
-*Generated by Antigravity for Maliev.CompensationService*
 
+## Mandatory Rules
 
-## Git & Version Control — Mandatory Rules
-
-### 🚨 CRITICAL: Always Commit Code Changes (Non-Negotiable)
-- **You MUST commit your changes to the local repository after completing any meaningful unit of work.**
-- **Never accumulate uncommitted changes.** Do not wait until end of session or until something breaks.
-- **Commit early and often** — if a change is meaningful (even a small fix or refactor), commit it.
-- **You do NOT need to push to remote** — local commits are sufficient to protect against accidental loss.
-- **If you are unsure whether to commit, commit anyway.** Extra commits are harmless; lost work is irreversible.
-- This rule applies even if you are just "testing" or "exploring" — use git branches to isolate experimental work and commit those changes too.
-
-### 🚨 CRITICAL: Never Use `git checkout` to Restore Broken Files
-- **NEVER use `git checkout` to restore or recover files.** This operation discards uncommitted changes permanently and will result in data loss.
-- **To undo/recover from broken files: first commit your current changes, then use `git revert` or `git reset --soft` to safely undo.**
+- **`TreatWarningsAsErrors = true`**: Zero warnings allowed. No suppression
+- **`[RequirePermission("compensation.resources.action")]`**: On all endpoints, not plain `[Authorize]`
+- **API versioning**: All routes versioned (`v1/`)
+- **Service prefix**: Routes prefixed with service domain (`/compensation`)
+- **Scalar docs**: Configured at `/compensation/scalar`
+- **Secrets**: Never hardcoded. Use GCP Secret Manager or environment variables
+- **Async/await**: All the way down. Pass `CancellationToken`
+- **EF Core Design package**: Only in Infrastructure project, never in Api
+- **PostgreSQL xmin**: Shadow property only — `entity.Property<uint>("xmin").HasColumnType("xid").IsRowVersion()`. Never add entity property
+- **Temporary files**: Generate in `/temp` folder, clean up afterwards
 
 ## Database & EF Core — Mandatory Rules
 
 ### EF Core Design Package
-- ❌ `Microsoft.EntityFrameworkCore.Design` MUST NOT be in Api projects
-- ✅ It belongs ONLY in the Infrastructure (or Data) project where migrations live
-- Migration commands must target Infrastructure as both project and startup-project (since EF Core Design package is in Infrastructure):
+- `Microsoft.EntityFrameworkCore.Design` MUST NOT be in Api projects
+- It belongs ONLY in the Infrastructure (or Data) project where migrations live
+- Migration commands must target Infrastructure as both project and startup-project:
   ```
-  dotnet ef migrations add <Name> --project Maliev.<Domain>Service.Infrastructure --startup-project Maliev.<Domain>Service.Infrastructure
+  dotnet ef migrations add <Name> --project Maliev.CompensationService.Infrastructure --startup-project Maliev.CompensationService.Infrastructure
   ```
 
 ### PostgreSQL xmin Concurrency — Mandatory Pattern
@@ -154,6 +183,18 @@ Use shadow property ONLY. Never add a Xmin/xmin property to domain entities.
 ```csharp
 entity.Property<uint>("xmin").HasColumnType("xid").IsRowVersion();
 ```
-- ❌ Never use `UseXminAsConcurrencyToken()` (removed in Npgsql EF v7)
-- ❌ Never use entity property `public uint Xmin { get; set; }` or `public uint xmin { get; set; }`
-- ❌ Never use `.Ignore(e => e.Xmin)` — remove the entity property instead
+- Never use `UseXminAsConcurrencyToken()` (removed in Npgsql EF v7)
+- Never use entity property `public uint Xmin { get; set; }` or `public uint xmin { get; set; }`
+- Never use `.Ignore(e => e.Xmin)` — remove the entity property instead
+
+---
+
+## Git Rules
+
+- Each `Maliev.*` folder is an independent git repo. Work from within this service directory for git commands
+- **Commit early and often** after every meaningful unit of work. Do not accumulate changes
+- **Never use `git checkout` to restore files** — commit first, then `git revert` or `git reset --soft`
+- Feature branches merged to `develop` via PR. Do not push without being asked
+
+---
+*Generated by Antigravity for Maliev.CompensationService*
