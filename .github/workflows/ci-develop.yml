@@ -16,7 +16,7 @@ jobs:
       - name: Switch to PackageReference for Docker build
         run: |
           # Use develop version format for shared libraries
-          VERSION_FORMAT="1.0.*-*"
+          VERSION_FORMAT="1.0.*-alpha*"
           find . -name "*.csproj" -type f -exec sed -i             's|<ProjectReference Include=".*Maliev.Aspire.ServiceDefaults.*.csproj" />|<PackageReference Include="Maliev.Aspire.ServiceDefaults" Version="'$VERSION_FORMAT'" />|g'             {} +
           find . -name "*.csproj" -type f -exec sed -i             's|<ProjectReference Include=".*Maliev.MessagingContracts.*.csproj" />|<PackageReference Include="Maliev.MessagingContracts" Version="'$VERSION_FORMAT'" />|g'             {} +
           echo "Switched to PackageReference for ServiceDefaults and MessagingContracts"
