@@ -1,6 +1,7 @@
-using Maliev.CompensationService.Application.Commands;
 using Maliev.CompensationService.Application.Commands.Handlers;
+using Maliev.MessagingContracts.Contracts.Compensation;
 using MassTransit;
+using LocalUndoArchiveCompensationCommand = Maliev.CompensationService.Application.Commands.UndoArchiveCompensationCommand;
 
 namespace Maliev.CompensationService.Infrastructure.Consumers;
 
@@ -23,6 +24,11 @@ public class UndoArchiveCompensationConsumer : IConsumer<UndoArchiveCompensation
     /// <inheritdoc/>
     public async Task Consume(ConsumeContext<UndoArchiveCompensationCommand> context)
     {
-        await _handler.HandleAsync(context.Message, context.CancellationToken);
+        await _handler.HandleAsync(
+            new LocalUndoArchiveCompensationCommand
+            {
+                EmployeeId = context.Message.Payload.EmployeeId
+            },
+            context.CancellationToken);
     }
 }
