@@ -76,7 +76,7 @@ curl http://localhost:5000/health
 
 ### Access API Documentation
 
-Navigate to: `http://localhost:5000/scalar/v1`
+Navigate to: `http://localhost:5000/compensation/scalar`
 
 The Scalar UI provides interactive API documentation with authentication support.
 
@@ -84,10 +84,10 @@ The Scalar UI provides interactive API documentation with authentication support
 
 #### 1. Obtain JWT Token (Development Mode)
 
-For local development, the service accepts a dev token:
+Obtain a development JWT from the local AuthService flow, then expose it only in the current shell:
 
 ```bash
-export DEV_TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+export DEV_TOKEN="<jwt-from-local-auth-service>"
 ```
 
 *(In production, obtain tokens from your identity provider)*
@@ -96,7 +96,7 @@ export DEV_TOKEN="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 
 ```bash
 curl -H "Authorization: Bearer $DEV_TOKEN" \
-     http://localhost:5000/api/v1/employees/3fa85f64-5717-4562-b3fc-2c963f66afa6/compensation
+     http://localhost:5000/compensation/v1/employees/3fa85f64-5717-4562-b3fc-2c963f66afa6/compensation
 ```
 
 ## Common Workflows
