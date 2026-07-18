@@ -7,7 +7,7 @@ namespace Maliev.CompensationService.Tests.Integration;
 
 public class TestcontainersFixture : IAsyncLifetime
 {
-    public PostgreSqlContainer PostgreSqlContainer { get; } = 
+    public PostgreSqlContainer PostgreSqlContainer { get; } =
 #pragma warning disable CS0618
         new PostgreSqlBuilder().WithImage("postgres:18")
         .WithDatabase("compensation_test")

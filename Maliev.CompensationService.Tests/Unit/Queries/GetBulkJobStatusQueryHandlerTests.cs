@@ -68,7 +68,7 @@ public class GetBulkJobStatusQueryHandlerTests
     {
         var jobId = Guid.NewGuid();
         var errorDetails = "[{\"EmployeeId\":\"abc\",\"Error\":\"Test error\"}]";
-        
+
         var job = new BulkJob
         {
             Id = jobId,
