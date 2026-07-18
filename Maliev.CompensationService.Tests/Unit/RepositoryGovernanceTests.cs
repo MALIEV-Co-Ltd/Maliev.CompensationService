@@ -51,6 +51,7 @@ public sealed class RepositoryGovernanceTests
         Assert.Contains("ref: 25a5c3b2d3d6b5ce8ed485d2d44a28f4dc4c9b51", source, StringComparison.Ordinal);
         Assert.Contains("repository: MALIEV-Co-Ltd/Maliev.MessagingContracts", source, StringComparison.Ordinal);
         Assert.Contains("ref: 559a00db0c7920a5247fdff60d4476ad23a9a501", source, StringComparison.Ordinal);
+        Assert.Contains("UsePackageReferences: \"false\"", source, StringComparison.Ordinal);
         Assert.DoesNotContain("uses: actions/checkout@v", source, StringComparison.Ordinal);
         Assert.DoesNotContain("uses: actions/setup-dotnet@v", source, StringComparison.Ordinal);
     }
