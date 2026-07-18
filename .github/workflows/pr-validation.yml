@@ -1,0 +1,12 @@
+name: Pull Request Validation
+
+on:
+  pull_request:
+    branches: [develop, staging, main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    uses: ./.github/workflows/_validate.yml

@@ -1,0 +1,32 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: check-yaml
+        name: Check YAML Syntax
+        args: [--allow-multiple-documents]
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.35.1
+    hooks:
+      - id: yamllint
+        name: Lint YAML Files
+        args: [-c=.yamllint.yml]
+
+  - repo: local
+    hooks:
+      - id: dotnet-format
+        name: dotnet format
+        entry: dotnet format whitespace Maliev.CompensationService.slnx
+        language: system
+        files: \.(cs|vb)$
+        pass_filenames: false
+
+      - id: verify-build
+        name: verify build
+        entry: dotnet build Maliev.CompensationService.slnx -c Release
+        language: system
+        files: \.(cs|json|csproj|slnx)$
+        pass_filenames: false

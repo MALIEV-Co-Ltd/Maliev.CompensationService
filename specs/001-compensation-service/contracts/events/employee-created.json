@@ -1,0 +1,64 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://maliev.com/schemas/employee-created-event.json",
+  "title": "EmployeeCreatedEvent",
+  "description": "Consumed from Employee Service when a new employee is created",
+  "type": "object",
+  "required": [
+    "employeeId",
+    "employeeNumber",
+    "startDate",
+    "departmentId"
+  ],
+  "properties": {
+    "employeeId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Employee unique identifier"
+    },
+    "employeeNumber": {
+      "type": "string",
+      "description": "Employee number (e.g., EMP-001)"
+    },
+    "startDate": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Employee start date"
+    },
+    "departmentId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Department identifier"
+    },
+    "positionId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Position identifier (optional)"
+    },
+    "managerId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Manager identifier (optional)"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Event publication timestamp"
+    }
+  },
+  "examples": [
+    {
+      "employeeId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "employeeNumber": "EMP-001234",
+      "startDate": "2025-01-15T00:00:00Z",
+      "departmentId": "6fa85f64-5717-4562-b3fc-2c963f66afa9",
+      "positionId": "9fa85f64-5717-4562-b3fc-2c963f66afa0",
+      "managerId": "1fa85f64-5717-4562-b3fc-2c963f66afa1",
+      "timestamp": "2025-01-01T10:30:00Z"
+    }
+  ],
+  "notes": [
+    "Compensation Service prepares to accept initial compensation setup for this employee",
+    "No automatic compensation record is created - HR must explicitly set initial compensation"
+  ]
+}

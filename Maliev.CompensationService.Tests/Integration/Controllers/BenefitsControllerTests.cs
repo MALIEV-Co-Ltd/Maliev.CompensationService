@@ -1,0 +1,230 @@
+using System.Net;
+using System.Net.Http.Json;
+using Maliev.CompensationService.Application.DTOs;
+using Maliev.CompensationService.Domain.Authorization;
+using Maliev.CompensationService.Domain.Entities;
+using Maliev.CompensationService.Domain.Enums;
+using Maliev.CompensationService.Infrastructure.Data;
+using MassTransit;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
+using Xunit;
+
+namespace Maliev.CompensationService.Tests.Integration.Controllers;
+
+[Collection("Testcontainers")]
+public class BenefitsControllerTests : BaseIntegrationTest
+{
+    public BenefitsControllerTests(WebApplicationFactory<Program> factory, TestcontainersFixture fixture)
+        : base(factory, fixture)
+    {
+    }
+
+    [Fact]
+    public async Task EnrollInBenefit_ShouldReturnCreated()
+    {
+        // Arrange
+        var client = CreateClient();
+        var employeeId = Guid.NewGuid();
+        Guid benefitId;
+
+        using (var scope = Factory.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<CompensationDbContext>();
+            await context.Database.EnsureCreatedAsync();
+
+            var benefit = new Benefit { Id = Guid.NewGuid(), Name = "Integration Health", BenefitType = BenefitType.HealthInsurance };
+            context.Set<Benefit>().Add(benefit);
+            await context.SaveChangesAsync();
+            benefitId = benefit.Id;
+        }
+
+        var postData = new EnrollInBenefitDto
+        {
+            BenefitId = benefitId,
+            EnrollmentDate = DateTime.UtcNow,
+            EmployeeContribution = 150,
+            CoverageLevel = "Individual",
+            Dependents = new List<DependentDto>
+            {
+                new DependentDto { FirstName = "Jane", LastName = "Doe", Relationship = DependentRelationship.Spouse, DateOfBirth = new DateTime(1990, 1, 1) }
+            }
+        };
+
+        // Act
+        var response = await client.PostAsJsonSnakeCaseAsync($"/compensation/v1/employees/{employeeId}/benefits/enrollments", postData);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var result = await response.Content.ReadFromJsonSnakeCaseAsync<BenefitsEnrollmentDto>();
+        Assert.NotNull(result);
+        Assert.Equal(employeeId, result.EmployeeId);
+        Assert.Single(result.Dependents);
+    }
+
+    [Fact]
+    public async Task GetAvailableBenefits_ShouldReturnOk()
+    {
+        // Arrange
+        var client = CreateClient();
+
+        using (var scope = Factory.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<CompensationDbContext>();
+            await context.Database.EnsureCreatedAsync();
+
+            if (!await context.Set<Benefit>().AnyAsync(b => b.Name == "Dental"))
+            {
+                context.Set<Benefit>().Add(new Benefit { Id = Guid.NewGuid(), Name = "Dental", BenefitType = BenefitType.DentalInsurance, IsActive = true });
+                await context.SaveChangesAsync();
+            }
+        }
+
+        // Act
+        var response = await client.GetAsync("/compensation/v1/benefits");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonSnakeCaseAsync<IEnumerable<BenefitDto>>();
+        Assert.NotEmpty(result!);
+    }
+
+    [Fact]
+    public async Task AddDependent_ShouldReturnOk()
+    {
+        // Arrange
+        var client = CreateClient();
+        var employeeId = Guid.NewGuid();
+        Guid benefitId;
+
+        using (var scope = Factory.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<CompensationDbContext>();
+            await context.Database.EnsureCreatedAsync();
+
+            var benefit = new Benefit { Id = Guid.NewGuid(), Name = "AddDep Health", BenefitType = BenefitType.HealthInsurance, IsActive = true };
+            context.Set<Benefit>().Add(benefit);
+            await context.SaveChangesAsync();
+            benefitId = benefit.Id;
+        }
+
+        var enrollData = new EnrollInBenefitDto
+        {
+            BenefitId = benefitId,
+            EnrollmentDate = DateTime.UtcNow,
+            EmployeeContribution = 100,
+            CoverageLevel = "Individual",
+            Dependents = new List<DependentDto>()
+        };
+
+        var enrollResponse = await client.PostAsJsonSnakeCaseAsync($"/compensation/v1/employees/{employeeId}/benefits/enrollments", enrollData);
+        var enrollment = await enrollResponse.Content.ReadFromJsonSnakeCaseAsync<BenefitsEnrollmentDto>();
+        var enrollmentId = enrollment!.Id;
+
+        var dependent = new DependentDto
+        {
+            FirstName = "John",
+            LastName = "Doe",
+            Relationship = DependentRelationship.Child,
+            DateOfBirth = new DateTime(2010, 1, 1),
+            NationalId = "123456789"
+        };
+
+        // Act
+        var response = await client.PostAsJsonSnakeCaseAsync($"/compensation/v1/employees/{employeeId}/benefits/enrollments/{enrollmentId}/dependents", dependent);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonSnakeCaseAsync<DependentDto>();
+        Assert.NotNull(result);
+        Assert.Equal("John", result.FirstName);
+    }
+
+    [Fact]
+    public async Task UpdateBenefitsEnrollment_ShouldReturnOk()
+    {
+        // Arrange
+        var client = CreateClient();
+        var employeeId = Guid.NewGuid();
+        Guid enrollmentId;
+
+        using (var scope = Factory.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<CompensationDbContext>();
+            await context.Database.EnsureCreatedAsync();
+
+            var benefit = new Benefit { Id = Guid.NewGuid(), Name = "Update Health", BenefitType = BenefitType.HealthInsurance };
+            context.Set<Benefit>().Add(benefit);
+
+            var enrollment = new BenefitsEnrollment
+            {
+                Id = Guid.NewGuid(),
+                EmployeeId = employeeId,
+                BenefitId = benefit.Id,
+                EnrollmentDate = DateTime.UtcNow,
+                Status = EnrollmentStatus.Active
+            };
+            context.Set<BenefitsEnrollment>().Add(enrollment);
+            await context.SaveChangesAsync();
+            enrollmentId = enrollment.Id;
+        }
+
+        var updateData = new UpdateBenefitsEnrollmentDto
+        {
+            EmployeeContribution = 200,
+            CoverageLevel = "Family",
+            Dependents = new List<DependentDto>()
+        };
+
+        // Act
+        var response = await client.PutAsJsonSnakeCaseAsync($"/compensation/v1/employees/{employeeId}/benefits/enrollments/{enrollmentId}", updateData);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var result = await response.Content.ReadFromJsonSnakeCaseAsync<BenefitsEnrollmentDto>();
+        Assert.Equal(200, result!.EmployeeContribution);
+        Assert.Equal("Family", result.CoverageLevel);
+    }
+
+    [Fact]
+    public async Task TerminateBenefit_ShouldReturnNoContent()
+    {
+        // Arrange
+        var client = CreateClient();
+        var employeeId = Guid.NewGuid();
+        Guid enrollmentId;
+
+        using (var scope = Factory.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<CompensationDbContext>();
+            await context.Database.EnsureCreatedAsync();
+
+            var benefit = new Benefit { Id = Guid.NewGuid(), Name = "Terminate Health", BenefitType = BenefitType.HealthInsurance };
+            context.Set<Benefit>().Add(benefit);
+
+            var enrollment = new BenefitsEnrollment
+            {
+                Id = Guid.NewGuid(),
+                EmployeeId = employeeId,
+                BenefitId = benefit.Id,
+                EnrollmentDate = DateTime.UtcNow,
+                Status = EnrollmentStatus.Active
+            };
+            context.Set<BenefitsEnrollment>().Add(enrollment);
+            await context.SaveChangesAsync();
+            enrollmentId = enrollment.Id;
+        }
+
+        // Act
+        var response = await client.DeleteAsync($"/compensation/v1/employees/{employeeId}/benefits/enrollments/{enrollmentId}");
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    }
+}

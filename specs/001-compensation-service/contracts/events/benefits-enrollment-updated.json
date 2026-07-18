@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://maliev.com/schemas/benefits-enrollment-updated-event.json",
+  "title": "BenefitsEnrollmentUpdatedEvent",
+  "description": "Published when an employee's benefits enrollment status changes",
+  "type": "object",
+  "required": [
+    "employeeId",
+    "benefitId",
+    "enrollmentId",
+    "status",
+    "effectiveDate"
+  ],
+  "properties": {
+    "employeeId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Employee unique identifier"
+    },
+    "benefitId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Benefit program identifier"
+    },
+    "enrollmentId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Benefits enrollment record identifier"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["Active", "Pending", "Terminated", "OnHold"],
+      "description": "New enrollment status"
+    },
+    "previousStatus": {
+      "type": "string",
+      "enum": ["Active", "Pending", "Terminated", "OnHold"],
+      "description": "Previous enrollment status (null for new enrollments)"
+    },
+    "effectiveDate": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Effective date of the status change"
+    },
+    "coverageLevel": {
+      "type": "string",
+      "description": "Coverage level (Individual, Family, etc.)"
+    },
+    "dependentCount": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Number of dependents on this enrollment"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Event publication timestamp"
+    }
+  },
+  "examples": [
+    {
+      "employeeId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "benefitId": "5fa85f64-5717-4562-b3fc-2c963f66afa8",
+      "enrollmentId": "9fa85f64-5717-4562-b3fc-2c963f66afa9",
+      "status": "Active",
+      "previousStatus": "Pending",
+      "effectiveDate": "2025-04-01T00:00:00Z",
+      "coverageLevel": "Family",
+      "dependentCount": 2,
+      "timestamp": "2025-04-01T00:00:00Z"
+    },
+    {
+      "employeeId": "4fa85f64-5717-4562-b3fc-2c963f66afa7",
+      "benefitId": "5fa85f64-5717-4562-b3fc-2c963f66afa8",
+      "enrollmentId": "8fa85f64-5717-4562-b3fc-2c963f66afa8",
+      "status": "Terminated",
+      "previousStatus": "Active",
+      "effectiveDate": "2025-12-31T00:00:00Z",
+      "coverageLevel": "Individual",
+      "dependentCount": 0,
+      "timestamp": "2025-12-31T00:00:00Z"
+    }
+  ]
+}

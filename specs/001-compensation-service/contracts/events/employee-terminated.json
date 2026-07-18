@@ -1,0 +1,52 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://maliev.com/schemas/employee-terminated-event.json",
+  "title": "EmployeeTerminatedEvent",
+  "description": "Consumed from Employee Service when an employee is terminated",
+  "type": "object",
+  "required": [
+    "employeeId",
+    "terminationDate"
+  ],
+  "properties": {
+    "employeeId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Employee unique identifier"
+    },
+    "terminationDate": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Employee termination date"
+    },
+    "terminationType": {
+      "type": "string",
+      "enum": ["Voluntary", "Involuntary", "Retirement", "EndOfContract"],
+      "description": "Type of termination"
+    },
+    "finalWorkingDay": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last day employee worked"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Event publication timestamp"
+    }
+  },
+  "examples": [
+    {
+      "employeeId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+      "terminationDate": "2025-12-31T00:00:00Z",
+      "terminationType": "Voluntary",
+      "finalWorkingDay": "2025-12-31T17:00:00Z",
+      "timestamp": "2025-12-15T14:00:00Z"
+    }
+  ],
+  "notes": [
+    "Compensation Service automatically terminates all active benefits enrollments with the termination date",
+    "Pending benefit enrollments (waiting period) are automatically rejected/cancelled",
+    "Publishes BenefitsEnrollmentUpdatedEvent for each terminated/cancelled enrollment"
+  ]
+}
