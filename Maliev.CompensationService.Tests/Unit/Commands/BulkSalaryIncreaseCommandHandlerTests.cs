@@ -51,7 +51,7 @@ public class BulkSalaryIncreaseCommandHandlerTests
     {
         var departmentId = Guid.NewGuid();
         var employeeId = Guid.NewGuid();
-        
+
         var records = new List<CompensationRecord>
         {
             new CompensationRecord
@@ -91,7 +91,7 @@ public class BulkSalaryIncreaseCommandHandlerTests
         var departmentId = Guid.NewGuid();
         var employeeId = Guid.NewGuid();
         var changedBy = Guid.NewGuid();
-        
+
         var records = new List<CompensationRecord>
         {
             new CompensationRecord

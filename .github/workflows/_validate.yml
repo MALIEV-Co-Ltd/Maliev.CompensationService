@@ -1,0 +1,107 @@
+name: Reusable Validation
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      IMAGE_TAG: maliev-compensationservice:validation-${{ github.run_id }}-${{ github.run_attempt }}
+      UsePackageReferences: "false"
+    steps:
+      - name: Checkout CompensationService
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          path: CompensationService
+          persist-credentials: false
+
+      - name: Checkout pinned public ServiceDefaults source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          repository: MALIEV-Co-Ltd/Maliev.Aspire
+          ref: 25a5c3b2d3d6b5ce8ed485d2d44a28f4dc4c9b51
+          path: Maliev.Aspire
+          persist-credentials: false
+
+      - name: Checkout pinned public MessagingContracts source
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+        with:
+          repository: MALIEV-Co-Ltd/Maliev.MessagingContracts
+          ref: 559a00db0c7920a5247fdff60d4476ad23a9a501
+          path: Maliev.MessagingContracts
+          persist-credentials: false
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore locked dependencies
+        run: dotnet restore Maliev.CompensationService.slnx --configfile nuget.config --locked-mode
+        working-directory: CompensationService
+
+      - name: Audit dependencies
+        run: dotnet list Maliev.CompensationService.slnx package --vulnerable --include-transitive --no-restore
+        working-directory: CompensationService
+
+      - name: Verify formatting
+        run: dotnet format Maliev.CompensationService.slnx --verify-no-changes --no-restore
+        working-directory: CompensationService
+
+      - name: Build
+        run: dotnet build Maliev.CompensationService.slnx --configuration Release --no-restore
+        working-directory: CompensationService
+
+      - name: Test
+        run: dotnet test Maliev.CompensationService.slnx --configuration Release --no-build --no-restore --verbosity normal
+        working-directory: CompensationService
+
+      - name: Scan repository for secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="gitleaks_8.30.1_linux_x64.tar.gz"
+          curl --fail --location --silent --show-error \
+            --output "$archive" \
+            "https://github.com/gitleaks/gitleaks/releases/download/v8.30.1/$archive"
+          echo "551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb  $archive" | sha256sum --check
+          tar --extract --gzip --file "$archive" gitleaks
+          ./gitleaks dir CompensationService --no-banner --redact
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c
+
+      - name: Build local production image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a
+        with:
+          context: CompensationService
+          file: CompensationService/Maliev.CompensationService.Api/Dockerfile
+          build-contexts: |
+            aspire=./Maliev.Aspire
+            messaging=./Maliev.MessagingContracts
+          load: true
+          push: false
+          tags: ${{ env.IMAGE_TAG }}
+
+      - name: Validate runtime image metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          metadata="$(docker image inspect "$IMAGE_TAG")"
+          test "$(jq -r '.[0].Config.User' <<< "$metadata")" = "app"
+          test "$(jq -c '.[0].Config.Entrypoint' <<< "$metadata")" = '["dotnet","Maliev.CompensationService.Api.dll"]'
+
+      - name: Scan image for high-severity vulnerabilities
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25
+        with:
+          image-ref: ${{ env.IMAGE_TAG }}
+          format: table
+          scanners: vuln
+          severity: HIGH,CRITICAL
+          exit-code: "1"

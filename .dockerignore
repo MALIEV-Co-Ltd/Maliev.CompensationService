@@ -24,7 +24,7 @@
 **/.DS_Store
 
 # Git
-**/.git/
+.git/
 **/.gitignore
 **/.gitattributes
 

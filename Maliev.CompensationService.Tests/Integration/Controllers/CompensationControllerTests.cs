@@ -59,10 +59,54 @@ public class CompensationControllerTests : BaseIntegrationTest
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        var dto = await response.Content.ReadFromJsonSnakeCaseAsync<CompensationRecordDto>();
+        var wireJson = await response.Content.ReadAsStringAsync();
+        Assert.Contains("\"employee_id\"", wireJson, StringComparison.Ordinal);
+        Assert.Contains("\"base_salary\"", wireJson, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"employeeId\"", wireJson, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"baseSalary\"", wireJson, StringComparison.Ordinal);
+
+        var dto = System.Text.Json.JsonSerializer.Deserialize<CompensationRecordDto>(wireJson, TestHelpers.JsonOptions);
         Assert.NotNull(dto);
         Assert.Equal(employeeId, dto.EmployeeId);
         Assert.Equal(60000, dto.BaseSalary);
+    }
+
+    [Fact]
+    public async Task GetCompensationDetails_ShouldReturnUnauthorized_WithoutBearerToken()
+    {
+        var client = Factory.CreateClient();
+
+        var response = await client.GetAsync($"/compensation/v1/employees/{Guid.NewGuid()}/compensation");
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetCompensationDetails_ShouldReturnForbidden_WithoutReadPermission()
+    {
+        var client = CreateAuthenticatedClient([]);
+
+        var response = await client.GetAsync($"/compensation/v1/employees/{Guid.NewGuid()}/compensation");
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task ApiDocumentation_ShouldExposeScalarAndVersionedOpenApi()
+    {
+        var client = Factory.CreateClient();
+
+        var openApiResponse = await client.GetAsync("/compensation/openapi/v1.json");
+        var scalarResponse = await client.GetAsync("/compensation/scalar");
+
+        Assert.Equal(HttpStatusCode.OK, openApiResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, scalarResponse.StatusCode);
+        var openApi = await openApiResponse.Content.ReadAsStringAsync();
+        var scalar = await scalarResponse.Content.ReadAsStringAsync();
+        Assert.Contains("\"openapi\"", openApi, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("/compensation/v1/employees", openApi, StringComparison.Ordinal);
+        Assert.Contains("Scalar", scalar, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("v1.json", scalar, StringComparison.Ordinal);
     }
 
     [Fact]

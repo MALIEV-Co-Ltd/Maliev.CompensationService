@@ -54,7 +54,7 @@ public class AddDependentCommandHandlerTests
     public async Task Handle_ShouldThrowException_WhenEnrollmentNotFound()
     {
         var enrollmentId = Guid.NewGuid();
-        
+
         _benefitsRepoMock.Setup(r => r.GetEnrollmentByIdAsync(enrollmentId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((BenefitsEnrollment?)null);
 

@@ -1,119 +1,12 @@
-name: CI - Main
+name: Validate - Main
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+
+permissions:
+  contents: read
 
 jobs:
-  build-and-deploy:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
-
-      - name: Set up .NET
-        uses: actions/setup-dotnet@v5
-        with:
-          dotnet-version: "10.x"
-
-      - name: Restore dependencies
-        run: dotnet restore Maliev.CompensationService.slnx
-        env:
-          NUGET_USERNAME: ${{ github.actor }}
-          NUGET_PASSWORD: ${{ secrets.GITOPS_PAT }}
-
-      - name: Build
-        run: dotnet build Maliev.CompensationService.slnx --no-restore
-
-      - name: Test
-        run: dotnet test Maliev.CompensationService.slnx --no-build --verbosity normal
-        working-directory: ${{ github.workspace }}
-
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v3
-        with:
-          credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-      - name: Set up Google Cloud SDK
-        uses: google-github-actions/setup-gcloud@v3
-        with:
-          project_id: maliev-website
-
-      - name: Build and push Docker image
-        run: |
-          gcloud auth configure-docker asia-southeast1-docker.pkg.dev
-          NUGET_USERNAME=${{ github.actor }} \
-          NUGET_PASSWORD=${{ secrets.GITOPS_PAT }} \
-            docker build \
-            --secret id=nuget_username,env=NUGET_USERNAME \
-            --secret id=nuget_password,env=NUGET_PASSWORD \
-            -t asia-southeast1-docker.pkg.dev/maliev-website/maliev-website-artifact-prod/maliev-compensation-service:${{ github.sha }} \
-            -f Maliev.CompensationService.Api/Dockerfile .
-          docker push asia-southeast1-docker.pkg.dev/maliev-website/maliev-website-artifact-prod/maliev-compensation-service:${{ github.sha }}
-
-      - name: Checkout maliev-gitops repository
-        uses: actions/checkout@v5
-        with:
-          repository: MALIEV-Co-Ltd/maliev-gitops
-          token: ${{ secrets.GITOPS_PAT }}
-          path: maliev-gitops
-
-      - name: Install Kustomize
-        uses: imranismail/setup-kustomize@v2
-
-
-      - name: Update image tag in maliev-gitops using Kustomize
-        run: |
-          cd maliev-gitops/3-apps/maliev-compensation-service/overlays/production
-          kustomize edit set image \
-            asia-southeast1-docker.pkg.dev/maliev-website/maliev-website-artifact/maliev-compensation-service=\
-          asia-southeast1-docker.pkg.dev/maliev-website/maliev-website-artifact-prod/maliev-compensation-service:${{ github.sha }}
-
-      - name: Create Pull Request
-        env:
-          GH_TOKEN: ${{ secrets.GITOPS_PAT }}
-          PR_BODY: |
-            Automated GitOps Update - **PRODUCTION**
-
-            - **Service**: CompensationService
-            - **Environment**: Production
-            - **Image Tag**: ${{ github.sha }}
-            - **Source Branch**: ${{ github.ref_name }}
-            - **Commit**: ${{ github.sha }}
-
-            Updates maliev-compensation-service image in production overlay.
-            **WARNING**: This is a production deployment and should be reviewed before merging.
-            This PR was automatically created by GitHub Actions.
-            Once merged, ArgoCD will automatically sync the changes to the maliev-prod namespace.
-
-            Triggered by: ${{ github.actor }}
-            Workflow: ${{ github.workflow }}
-            Run: [${{ github.run_id }}](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
-        run: |
-          cd maliev-gitops
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-
-          # Create a new branch for this update
-          BRANCH_NAME="compensation-service/prod-${{ github.sha }}"
-          git checkout -b $BRANCH_NAME
-
-          # Commit and push changes to the new branch
-          git add .
-          if git diff --staged --quiet; then
-            echo "No changes to commit"
-            exit 0
-          fi
-
-          git commit -m "chore(prod): Update CompensationService image to ${{ github.sha }}"
-          git push origin $BRANCH_NAME
-
-          # Create pull request using GitHub CLI
-          gh pr create \
-            --title "chore(prod): Update compensation-service" \
-            --body "$PR_BODY" \
-            --base main \
-            --head $BRANCH_NAME \
-            --repo MALIEV-Co-Ltd/maliev-gitops
+  validate:
+    uses: ./.github/workflows/_validate.yml

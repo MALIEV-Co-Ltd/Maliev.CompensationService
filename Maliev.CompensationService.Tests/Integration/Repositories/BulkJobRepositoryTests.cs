@@ -44,10 +44,10 @@ public class BulkJobRepositoryTests
             StartedAt = DateTime.UtcNow,
             StartedBy = Guid.NewGuid()
         };
-        
+
         context.Set<BulkJob>().Add(job);
         await context.SaveChangesAsync();
-        
+
         context.ChangeTracker.Clear();
 
         var result = await repository.GetByIdAsync(jobId);
@@ -108,21 +108,21 @@ public class BulkJobRepositoryTests
             StartedAt = DateTime.UtcNow,
             StartedBy = Guid.NewGuid()
         };
-        
+
         context.Set<BulkJob>().Add(job);
         await context.SaveChangesAsync();
-        
+
         context.ChangeTracker.Clear();
 
         job.Status = BulkJobStatus.Completed;
         job.SuccessCount = 100;
         job.CompletedAt = DateTime.UtcNow;
-        
+
         await repository.UpdateAsync(job);
 
         context.ChangeTracker.Clear();
         var updated = await context.Set<BulkJob>().FirstOrDefaultAsync(j => j.Id == job.Id);
-        
+
         Assert.Equal(BulkJobStatus.Completed, updated!.Status);
         Assert.Equal(100, updated.SuccessCount);
     }
